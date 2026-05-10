@@ -13,6 +13,7 @@ import Campaigns from './pages/Campaigns';
 import AudienceDNA from './pages/AudienceDNA';
 import BoxPredict from './pages/BoxPredict';
 import LiveTicker from './pages/LiveTicker';
+import Library from './pages/Library';
 import FIBGenerator from './pages/FIBGenerator';
 import LandingPage from './pages/LandingPage';
 import Discussion from './pages/Discussion';
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="audience-dna" element={<AudienceDNA />} />
               <Route path="box-predict" element={<BoxPredict />} />
               <Route path="live-ticker" element={<LiveTicker />} />
+              <Route path="library" element={<Library />} />
               <Route path="fib/:filmId" element={<FIBGenerator />} />
             </Route>
             <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

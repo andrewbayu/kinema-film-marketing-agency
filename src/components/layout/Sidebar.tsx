@@ -9,6 +9,7 @@ import {
   Wand2, 
   Network, 
   MessageCircle,
+  Library,
   Settings,
   ShieldCheck
 } from 'lucide-react';
@@ -75,7 +76,7 @@ export default function Sidebar() {
         <img 
           src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
           alt="Kala Logo" 
-          className="h-5 w-auto" 
+          className="h-10 w-auto" 
           referrerPolicy="no-referrer"
         />
       </div>
@@ -96,6 +97,7 @@ export default function Sidebar() {
           <div className="space-y-1">
             <NavItem to="/" icon={LayoutDashboard} label="Overview" />
             <NavItem to="/campaigns" icon={Film} label="Campaigns" />
+            <NavItem to="/library" icon={Library} label="Library" />
           </div>
         </div>
 

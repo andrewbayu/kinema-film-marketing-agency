@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { generateFIB } from '../lib/gemini';
 import { FIBContent } from '../lib/types';
-import { FileText, Download, Edit3, ChevronLeft, AlertCircle, FileType, BrainCircuit, RefreshCw, History } from 'lucide-react';
+import { FileText, Download, Edit3, ChevronLeft, AlertCircle, FileType, BrainCircuit, RefreshCw, History, Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
+import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 export default function FIBGenerator() {
   const navigate = useNavigate();
@@ -15,8 +17,10 @@ export default function FIBGenerator() {
   
   const [fibContent, setFibContent] = useState<FIBContent | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [status, setStatus] = useState<'Draft' | 'Final'>('Draft');
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (activeFilm?.id && !fibContent) {
@@ -70,8 +74,42 @@ export default function FIBGenerator() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    if (!reportRef.current || !fibContent) return;
+    
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      
+      // Use dom-to-image-more for better compatibility with modern CSS colors
+      const dataUrl = await domtoimage.toPng(element, {
+        quality: 1.0,
+        bgcolor: '#ffffff',
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        style: {
+          // Force standard color space if needed (though domtoimage usually handles modern CSS better)
+        }
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+      
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`KALA-FIB-${activeFilm?.title.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      // Fallback to print
+      window.print();
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (missingData) {
@@ -106,7 +144,9 @@ export default function FIBGenerator() {
   return (
     <div className="grid grid-cols-[1fr_320px] gap-8 h-full max-w-7xl mx-auto pb-20">
       {/* Left: Document Preview (PDF Ready) */}
-      <section className={cn(
+      <section 
+        ref={reportRef}
+        className={cn(
         "bg-white text-[#1a1a1a] p-16 shadow-2xl min-h-[1100px] font-serif border border-zinc-200 print:m-0 print:shadow-none print:border-0 overflow-y-auto",
         !fibContent && "flex flex-col items-center justify-center bg-zinc-50"
       )}>
@@ -304,12 +344,21 @@ export default function FIBGenerator() {
 
            <div className="space-y-3 pt-6 border-t border-border-subtle">
               <button 
-                onClick={handlePrint}
-                disabled={!fibContent}
+                onClick={handleExportPDF}
+                disabled={!fibContent || exporting}
                 className="w-full py-4 bg-transparent border-2 border-crimson text-crimson rounded-button font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-crimson hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wide"
               >
-                <Download className="w-5 h-5" />
-                Export as PDF
+                {exporting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Export as PDF
+                  </>
+                )}
               </button>
 
               <div className="flex items-center gap-2 px-3 py-2 bg-orange-glow/10 border border-orange-kala/20 rounded text-orange-kala text-[11px] font-medium italic">

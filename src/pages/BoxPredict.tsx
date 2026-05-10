@@ -1,21 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import BoxPredictForm from '../components/forms/BoxPredictForm';
 import ScenarioCard from '../components/ui/ScenarioCard';
 import SensitivityBar from '../components/ui/SensitivityBar';
 import { runBoxPredict } from '../lib/gemini';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { BoxPredictInput, BoxPredictResult } from '../lib/types';
-import { TrendingUp, AlertTriangle, ChevronRight, FileDown, Info, BrainCircuit, Users, History } from 'lucide-react';
+import { TrendingUp, AlertTriangle, ChevronRight, FileDown, Info, BrainCircuit, Users, History, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
+import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 export default function BoxPredict() {
   const navigate = useNavigate();
   const { audienceDNAOutput, boxPredictOutput, setBoxPredictOutput, activeFilm } = useFilmContext();
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Load latest result if available for active film
   useEffect(() => {
@@ -31,6 +35,40 @@ export default function BoxPredict() {
       if (latest) setBoxPredictOutput(latest);
     } catch (err) {
       console.error("Error loading latest predict", err);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current || !boxPredictOutput) return;
+    
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      
+      const dataUrl = await domtoimage.toPng(element, {
+        quality: 1.0,
+        bgcolor: '#0a0a0a',
+        width: element.offsetWidth,
+        height: element.offsetHeight
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+      
+      pdf.setProperties({ title: `BoxPredict - ${activeFilm?.title}` });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`KALA-BoxPredict-${activeFilm?.title.replace(/\s+/g, '-')}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      window.print();
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -137,7 +175,8 @@ export default function BoxPredict() {
       </section>
 
       {/* Results Section */}
-      <AnimatePresence mode="wait">
+      <div ref={reportRef} className="bg-black p-4">
+        <AnimatePresence mode="wait">
         {loading ? (
              <motion.div 
               key="loading"
@@ -233,9 +272,17 @@ export default function BoxPredict() {
                  >
                    Generate FIB Generator →
                  </button>
-                 <button className="px-8 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors uppercase tracking-wide">
-                    <FileDown className="w-5 h-5" />
-                    Export BoxPredict Report
+                 <button 
+                  onClick={handleExportPDF}
+                  disabled={exporting}
+                  className="px-8 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors uppercase tracking-wide disabled:opacity-50"
+                 >
+                    {exporting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <FileDown className="w-5 h-5" />
+                    )}
+                    {exporting ? 'Exporting...' : 'Export BoxPredict Report'}
                  </button>
               </div>
             </motion.div>
@@ -250,7 +297,8 @@ export default function BoxPredict() {
               </div>
             </div>
           )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

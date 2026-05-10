@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FilmProfileForm from '../components/forms/FilmProfileForm';
 import SegmentCard from '../components/ui/SegmentCard';
 import { runAudienceDNA } from '../lib/gemini';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { FilmProfileInput, AudienceDNAResult } from '../lib/types';
-import { Users, Info, ChevronRight, FileDown, BrainCircuit, History } from 'lucide-react';
+import { Users, Info, ChevronRight, FileDown, BrainCircuit, History, AlertTriangle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { dbService } from '../services/dbService';
+import domtoimage from 'dom-to-image-more';
+import { jsPDF } from 'jspdf';
 
 export default function AudienceDNA() {
   const navigate = useNavigate();
   const { audienceDNAOutput, setAudienceDNAOutput, activeFilm } = useFilmContext();
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLElement>(null);
 
   // Load latest result if available for active film
   useEffect(() => {
@@ -29,6 +33,40 @@ export default function AudienceDNA() {
       if (latest) setAudienceDNAOutput(latest);
     } catch (err) {
       console.error("Error loading latest DNA", err);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current || !audienceDNAOutput) return;
+    
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      
+      const dataUrl = await domtoimage.toPng(element, {
+        quality: 1.0,
+        bgcolor: '#0a0a0a',
+        width: element.offsetWidth,
+        height: element.offsetHeight
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+      
+      pdf.setProperties({ title: `AudienceDNA - ${activeFilm?.title}` });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`KALA-AudienceDNA-${activeFilm?.title.replace(/\s+/g, '-')}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      window.print();
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -95,7 +133,7 @@ export default function AudienceDNA() {
       </aside>
 
       {/* Right: Results Area */}
-      <section className="min-h-0 flex flex-col">
+      <section ref={reportRef} className="min-h-0 flex flex-col p-4 bg-black">
         <AnimatePresence mode="wait">
           {!audienceDNAOutput && !loading ? (
             <motion.div 
@@ -190,9 +228,17 @@ export default function AudienceDNA() {
                    Continue to BoxPredict™
                    <ChevronRight className="w-5 h-5" />
                  </button>
-                 <button className="flex-1 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">
-                    <FileDown className="w-5 h-5" />
-                    Export Audience Report
+                 <button 
+                   onClick={handleExportPDF}
+                   disabled={exporting}
+                   className="flex-1 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors disabled:opacity-50"
+                 >
+                    {exporting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <FileDown className="w-5 h-5" />
+                    )}
+                    {exporting ? 'Exporting...' : 'Export Audience Report'}
                  </button>
               </div>
             </motion.div>

@@ -15,7 +15,7 @@ export interface Film {
   leadCast?: string;
   director?: string;
   budgetTier?: BudgetTier;
-  releaseWindow?: ReleaseWindow;
+  releaseWindow?: string;
   ipType?: IPType;
 }
 
