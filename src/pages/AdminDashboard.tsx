@@ -21,12 +21,13 @@ interface TeamMember {
   createdAt: any;
 }
 
-type Tab = 'clients' | 'team';
+type Tab = 'clients' | 'team' | 'seeding';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('clients');
   const [clients, setClients] = useState<Client[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [bulkJson, setBulkJson] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +35,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
+    if (activeTab !== 'seeding') {
+      fetchData();
+    }
   }, [activeTab]);
 
   const fetchData = async () => {
@@ -48,7 +51,7 @@ export default function AdminDashboard() {
           ...doc.data()
         })) as Client[];
         setClients(clientsData);
-      } else {
+      } else if (activeTab === 'team') {
         const q = query(collection(db, 'team'), orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         const teamData = querySnapshot.docs.map(doc => ({
@@ -61,6 +64,34 @@ export default function AdminDashboard() {
       console.error(`Error fetching ${activeTab}:`, error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBulkUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkJson.trim() || !user) return;
+
+    setIsSubmitting(true);
+    try {
+      const data = JSON.parse(bulkJson);
+      if (!Array.isArray(data)) throw new Error("Input must be a JSON array");
+
+      for (const item of data) {
+        await addDoc(collection(db, 'campaigns'), {
+          ...item,
+          userId: user.uid, // Default to admin's UID for sample data
+          createdAt: serverTimestamp(),
+          status: 'active'
+        });
+      }
+      
+      alert(`Successfully uploaded ${data.length} campaigns.`);
+      setBulkJson('');
+    } catch (error) {
+      console.error("Bulk upload failed:", error);
+      alert("Invalid JSON format or upload error. Check console.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,11 +190,51 @@ export default function AdminDashboard() {
               Internal Team
               {activeTab === 'team' && <motion.div layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-crimson" />}
             </button>
+            <button 
+              onClick={() => setActiveTab('seeding')}
+              className={`pb-4 text-sm font-bold tracking-widest uppercase transition-all relative ${activeTab === 'seeding' ? 'text-white-primary' : 'text-white-tertiary hover:text-white-secondary'}`}
+            >
+              Seeding
+              {activeTab === 'seeding' && <motion.div layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-crimson" />}
+            </button>
           </div>
         </div>
 
-        {/* Add Section */}
-        <section className="bg-black-2 border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+        {activeTab === 'seeding' ? (
+          <section className="bg-black-2 border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+            <div className="flex items-center gap-3 text-white-secondary">
+              <ShieldCheck className="w-5 h-5" />
+              <h2 className="font-semibold">Bulk Upload Sample Campaigns</h2>
+            </div>
+            <form onSubmit={handleBulkUpload} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[11px] font-mono uppercase tracking-widest text-white-tertiary">JSON Array of Campaigns</label>
+                <textarea 
+                  value={bulkJson}
+                  onChange={(e) => setBulkJson(e.target.value)}
+                  placeholder='[{"title": "Epic Space Odyssey", "genre": "Sci-Fi", "budgetTier": "High"}, ...]'
+                  className="w-full h-64 bg-black-3 border border-white/10 rounded-xl p-4 text-[13px] font-mono focus:outline-none focus:border-crimson/50 focus:ring-1 focus:ring-crimson/50 transition-all placeholder:text-white/10"
+                />
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-crimson hover:bg-crimson-rich disabled:opacity-50 text-white py-4 rounded-xl font-bold transition-all active:scale-95"
+              >
+                {isSubmitting ? "Uploading..." : "Start Bulk Import"}
+              </button>
+              <div className="p-4 bg-white/5 rounded-lg border border-white/5">
+                <p className="text-[12px] text-white-tertiary leading-relaxed">
+                  <span className="text-white-secondary font-bold">Schema Note:</span><br />
+                  Each object should have: <code className="text-crimson">title</code> (required), <code className="text-crimson">genre</code>, <code className="text-crimson">budgetTier</code>, <code className="text-crimson">releaseWindow</code>, <code className="text-crimson">logline</code>.
+                </p>
+              </div>
+            </form>
+          </section>
+        ) : (
+          <>
+            {/* Add Section */}
+            <section className="bg-black-2 border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-3 text-white-secondary">
             {activeTab === 'clients' ? <UserPlus className="w-5 h-5" /> : <Briefcase className="w-5 h-5" />}
             <h2 className="font-semibold">{activeTab === 'clients' ? 'Authorize New Client' : 'Add Team Member'}</h2>
@@ -261,7 +332,9 @@ export default function AdminDashboard() {
             )}
           </div>
         </section>
-      </main>
-    </div>
+      </>
+    )}
+  </main>
+</div>
   );
 }

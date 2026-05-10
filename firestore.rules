@@ -78,18 +78,17 @@ service cloud.firestore {
     // Campaigns
     match /campaigns/{campaignId} {
       function isValidCampaign(data) {
-        return data.userId == request.auth.uid 
+        return (data.userId == request.auth.uid || isAdmin())
             && data.title is string && data.title.size() <= 200
             && data.createdAt is timestamp;
       }
 
-      allow read: if isOwner(existing().userId);
+      allow read: if isOwner(existing().userId) || isAdmin();
       allow create: if isSignedIn() && isValidId(campaignId) && isValidCampaign(incoming()) 
                      && incoming().createdAt == request.time;
-      allow update: if isOwner(existing().userId) && isValidCampaign(incoming())
-                     && incoming().userId == existing().userId
-                     && incoming().createdAt == existing().createdAt;
-      allow delete: if isOwner(existing().userId);
+      allow update: if (isOwner(existing().userId) || isAdmin()) && isValidCampaign(incoming())
+                     && (isAdmin() || (incoming().userId == existing().userId && incoming().createdAt == existing().createdAt));
+      allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
     // Audience DNA
