@@ -14,26 +14,26 @@ export default function StatsStrip() {
         <StatItem 
           target={278}
           suffix="+"
-          label="film Indonesia tayang di bioskop setiap tahun."
-          source="Badan Perfilman Indonesia, 2024"
+          label="Indonesian films released in theaters every year."
+          source="Indonesian Film Board, 2024"
           isVisible={isVisible}
         />
         <StatItem 
           target={3}
           prefix="< "
           suffix="%"
-          label="budget produksi yang masuk ke marketing. Sementara Hollywood mengalokasikan 15–30%."
+          label="production budget allocated to marketing. While Hollywood allocates 15–30%."
           isVisible={isVisible}
         />
         <StatItem 
           target={0}
-          label="agency marketing berbasis data yang fokus di film Indonesia. Sampai sekarang."
+          label="data-driven marketing agencies focusing on Indonesian cinema. Until now."
           isVisible={isVisible}
         />
         <StatItem 
           target={2}
           prefix="#"
-          label="pasar TikTok terbesar di dunia. Ini Indonesia. 126 juta pengguna aktif."
+          label="TikTok market in the world. This is Indonesia. 126 million active users."
           isVisible={isVisible}
         />
       </div>

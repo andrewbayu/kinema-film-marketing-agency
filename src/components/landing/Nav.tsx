@@ -1,10 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNavScroll } from '../../hooks/useNavScroll';
-import { useAuth } from '../../hooks/useAuth';
 
 export default function Nav() {
   const scrolled = useNavScroll();
-  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -15,19 +15,19 @@ export default function Nav() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img 
-            src="https://storage.googleapis.com/bluestark_explorer/Kala-logo.png" 
+            src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
             alt="Kala Logo" 
-            className="h-14 w-auto" 
+            className="h-10 w-auto" 
             referrerPolicy="no-referrer"
           />
         </div>
 
         <div className="hidden md:flex items-center gap-10">
           {[
-            { label: 'Cara Kerja', id: '#how-it-works' },
-            { label: 'Teknologi', id: '#technology' },
-            { label: 'Tentang', id: '#about' },
-            { label: 'Kontak', id: '#contact' }
+            { label: 'How it Works', id: '#how-it-works' },
+            { label: 'Technology', id: '#technology' },
+            { label: 'About', id: '#about' },
+            { label: 'Contact', id: '#contact' }
           ].map((link) => (
             <button 
               key={link.id}
@@ -40,12 +40,12 @@ export default function Nav() {
         </div>
 
         <button 
-          onClick={login}
+          onClick={() => navigate('/discussion')}
           className="relative group bg-crimson hover:bg-crimson-rich text-white-primary px-6 py-2.5 rounded-full font-semibold text-[13px] transition-all active:scale-95 shadow-[0_4px_20px_rgba(155,28,28,0.2)]"
         >
-          Ngobrol Dulu →
+          Talk with KALA →
           <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-black-4 border border-border-default px-3 py-1.5 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Gratis. Tanpa agenda. Kita lihat dulu.
+            Free. No agenda. Let's explore.
           </div>
         </button>
       </div>

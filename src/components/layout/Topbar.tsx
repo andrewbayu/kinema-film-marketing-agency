@@ -18,7 +18,7 @@ export default function Topbar() {
     return '';
   };
 
-  const today = new Intl.DateTimeFormat('id-ID', {
+  const today = new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'

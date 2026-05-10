@@ -1,11 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-import { useAuth } from '../../hooks/useAuth';
 
 export default function CTAFinal() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
-  const { login } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <section ref={ref as any} className="relative py-40 px-6 overflow-hidden">
@@ -19,11 +19,11 @@ export default function CTAFinal() {
             animate={isVisible ? { opacity: 1, y: 0 } : {}}
             className="font-mono text-[11px] uppercase tracking-[0.22em] text-white-tertiary font-bold block"
           >
-            Langkah pertama
+            The first step
           </motion.span>
           
           <h2 className="text-[clamp(48px,8vw,96px)] font-black text-white-primary leading-[0.92] tracking-tighter flex flex-col">
-            {['Tinggal', 'mempertemukan', 'keduanya.'].map((text, i) => (
+            {['It\'s time', 'to bring', 'them together.'].map((text, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, y: 24 }}
@@ -42,8 +42,7 @@ export default function CTAFinal() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="text-[18px] md:text-[20px] text-white-secondary leading-relaxed max-w-sm mx-auto"
         >
-          Obrolan pertama gratis dan tanpa agenda. Kami dengarkan, lalu cerita apa yang realistis bisa dilakukan.<br /><br />
-          Kalau cocok, kita lanjut. Kalau tidak, tidak apa-apa.
+          Let's find out how we can help amplify your movie. Consultation 100% Free, no commitment.
         </motion.p>
 
         <motion.div 
@@ -53,13 +52,13 @@ export default function CTAFinal() {
           className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4"
         >
           <button 
-             onClick={login}
+             onClick={() => navigate('/discussion')}
              className="w-full sm:w-auto bg-crimson hover:bg-crimson-rich text-white-primary px-10 py-5 rounded-full font-bold text-[16px] transition-all transform hover:scale-105 active:scale-95 shadow-2xl shadow-crimson/20"
           >
-            Mulai Percakapan →
+            Talk with KALA →
           </button>
           <button className="w-full sm:w-auto bg-transparent border border-border-default hover:border-border-strong text-white-primary px-10 py-5 rounded-full font-bold text-[16px] transition-all">
-            Pelajari Teknologinya
+            Learn the Technology
           </button>
         </motion.div>
 
@@ -69,7 +68,7 @@ export default function CTAFinal() {
           transition={{ duration: 1, delay: 1.2 }}
           className="font-mono text-[11px] text-white-tertiary pt-8"
         >
-          Respon dalam 24 jam · Bahasa Indonesia · Jakarta & Remote
+          Response in 24 hours · English & Indonesian · Jakarta & Remote
         </motion.div>
       </div>
     </section>

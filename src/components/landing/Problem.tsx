@@ -8,18 +8,18 @@ export default function Problem() {
   const cards = [
     {
       tag: 'DATA VACUUM',
-      title: 'Penonton ada. Datanya tidak.',
-      body: 'Jaringan bioskop menyimpan data penonton untuk kepentingan mereka sendiri. Itu hak mereka. Tapi konsekuensinya: setiap film baru mulai dari nol.\n\nSiapa yang datang minggu lalu? Dari mana mereka tahu? Mengapa mereka memilih film itu, bukan yang lain? Tidak ada yang tahu pasti.'
+      title: 'The audience exists. The data doesn\'t.',
+      body: 'Cinema chains keep audience data for their own interests. That\'s their right. But the consequence: every new film starts from zero.\n\nWho came last week? How did they know? Why did they choose that film, not the other? No one knows for sure.'
     },
     {
       tag: 'RELEASE CONGESTION',
-      title: '278 film. Satu kalender.',
-      body: 'Setiap tahun, ratusan film bersaing di bioskop yang sama, di bulan-bulan yang sama.\n\nTiming rilis bisa membuat atau menghancurkan sebuah film jauh sebelum penonton sempat memberikan pendapat. Dan mayoritas keputusan timing itu masih dibuat berdasarkan perkiraan, bukan perhitungan.'
+      title: '278 films. One calendar.',
+      body: 'Every year, hundreds of films compete in the same theaters, in the same months.\n\nRelease timing can make or break a film long before the audience gets a say. And most timing decisions are still made on guesswork, not calculations.'
     },
     {
       tag: 'UNMEASURED SPEND',
-      title: 'Budget keluar. Hasilnya tidak jelas.',
-      body: 'KOL sudah dibayar. Iklan sudah tayang. Tapi berapa tiket yang terjual karena itu? Tidak ada yang bisa menjawab dengan pasti.\n\nKalau tidak bisa diukur, tidak bisa diperbaiki. Dan siklus yang sama berulang dari film ke film.'
+      title: 'Budget spent. Results unclear.',
+      body: 'KOLs paid. Ads aired. But how many tickets were sold because of it? No one can answer for sure.\n\nIf you can\'t measure it, you can\'t improve it. The same cycle repeats from film to film.'
     }
   ];
 
@@ -31,7 +31,7 @@ export default function Problem() {
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           className="font-mono text-[11px] uppercase tracking-[0.22em] text-crimson font-bold block"
         >
-          Kenapa ini terjadi
+          Why this happens
         </motion.span>
         
         <motion.h2 
@@ -40,16 +40,16 @@ export default function Problem() {
           transition={{ delay: 0.1 }}
           className="text-[clamp(32px,5vw,56px)] font-bold text-white-primary leading-[1.1] tracking-tighter"
         >
-          Bukan masalah kreativitas. Masalah informasi.
+          Not a creative problem. An information problem.
         </motion.h2>
-
+ 
         <motion.p 
           initial={{ opacity: 0, y: 24 }}
           animate={isVisible ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2 }}
           className="text-[18px] text-white-secondary leading-relaxed"
         >
-          Hampir semua orang di industri film Indonesia tahu ada yang tidak beres dengan cara marketing bekerja. Tapi tidak banyak yang tahu persis di mana letak masalahnya.
+          Almost everyone in the Indonesian film industry knows something is broken with how marketing works. But not many know exactly where the leak is.
         </motion.p>
       </div>
 
@@ -65,7 +65,7 @@ export default function Problem() {
             <div className="absolute top-0 left-0 w-full h-[2px] bg-crimson transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
             
             <div className="space-y-6">
-              <span className="font-mono text-[9px] text-crimson font-bold tracking-widest uppercase">{card.tag}</span>
+              <span className="font-mono text-[10px] font-bold tracking-widest uppercase bg-gradient-to-r from-[#FF1A1A] to-[#8B0000] bg-clip-text text-transparent">{card.tag}</span>
               <h3 className="text-[24px] font-bold text-white-primary leading-tight tracking-tight">{card.title}</h3>
               <p className="text-[14px] text-white-secondary leading-relaxed whitespace-pre-line">
                 {card.body}

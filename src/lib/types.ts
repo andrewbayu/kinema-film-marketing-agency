@@ -14,8 +14,8 @@ export interface Film {
 
 export type BudgetTier = 'indie' | 'mid' | 'major';
 export type ReleaseWindow = 'lebaran' | 'nataru' | 'long-weekend' | 'regular' | 'ramadan';
-export type IPType = 'original' | 'adaptasi-kecil' | 'adaptasi-populer' | 'major-ip' | 'sekuel';
-export type GenreOption = 'Horror Supernatural' | 'Drama Romantis' | 'Komedi' | 'Keluarga / Animasi' | 'Thriller / Crime' | 'Biopic' | 'Action';
+export type IPType = 'original' | 'minor-adaptation' | 'popular-adaptation' | 'major-ip' | 'sequel';
+export type GenreOption = 'Supernatural Horror' | 'Romantic Drama' | 'Comedy' | 'Family / Animation' | 'Thriller / Crime' | 'Biopic' | 'Action';
 
 export interface FilmProfileInput {
   title: string;
@@ -61,7 +61,7 @@ export interface AudienceDNAResult {
   insight: string;
   channelPriority: Array<{
     channel: string;
-    priority: 'Tinggi' | 'Sedang' | 'Rendah';
+    priority: 'High' | 'Medium' | 'Low';
     reason: string;
   }>;
 }
@@ -82,7 +82,7 @@ export interface BoxPredictResult {
   sensitivity: Array<{
     dimension: string;
     impact: number;
-    direction: 'Positif' | 'Negatif';
+    direction: 'Positive' | 'Negative';
     note: string;
   }>;
   riskFlags: string[];

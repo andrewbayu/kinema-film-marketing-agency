@@ -5,9 +5,11 @@ import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 interface TransitionTextProps {
   text: string;
   blackout?: boolean;
+  bgImage?: string;
+  showLogo?: boolean;
 }
 
-export default function TransitionText({ text, blackout = false }: TransitionTextProps) {
+export default function TransitionText({ text, blackout = false, bgImage, showLogo = false }: TransitionTextProps) {
   const { ref, isVisible } = useScrollAnimation({ 
     threshold: 0.2,
     triggerOnce: true 
@@ -16,14 +18,30 @@ export default function TransitionText({ text, blackout = false }: TransitionTex
   return (
     <div 
       ref={ref as any} 
-      className={`relative py-60 px-6 flex items-center justify-center overflow-hidden transition-colors duration-1000 ${blackout ? 'bg-black-1 mt-[-1px] mb-[-1px]' : 'bg-transparent'}`}
+      className={`relative py-60 px-6 flex items-center justify-center overflow-hidden transition-all duration-1000 ${blackout ? 'bg-black-1 mt-[-1px] mb-[-1px]' : 'bg-transparent'}`}
+      style={bgImage ? {
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      } : {}}
     >
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         animate={isVisible ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-        className="max-w-4xl mx-auto text-center"
+        className="max-w-4xl mx-auto text-center space-y-8"
       >
+        {showLogo && (
+          <div className="flex justify-center mb-8">
+            <img 
+              src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
+              alt="Kala" 
+              className="h-16 w-auto opacity-90"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        )}
         <h3 className={`text-[28px] md:text-[40px] font-black tracking-tight leading-tight transition-colors duration-700 whitespace-pre-line ${isVisible ? 'text-white' : 'text-white-secondary/60'}`}>
           {text}
         </h3>

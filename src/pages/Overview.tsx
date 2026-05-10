@@ -56,13 +56,13 @@ export default function Overview() {
       {/* Metrics Row */}
       <div className="grid grid-cols-4 gap-6">
         <MetricCard 
-          label="Campaign Aktif"
+          label="Active Campaigns"
           value={campaigns.length.toString()}
           sub={`${activeCount} active · ${preReleaseCount} pre`}
           valueColor="default"
         />
         <MetricCard 
-          label="Total Reach Minggu Ini"
+          label="Total Reach This Week"
           value="0"
           sub="Simulation Mode"
           valueColor="green"
@@ -74,7 +74,7 @@ export default function Overview() {
           valueColor="orange"
         />
         <MetricCard 
-          label="Alert Terbuka"
+          label="Open Alerts"
           value="0"
           sub="All systems clear"
           valueColor="crimson"
@@ -83,13 +83,13 @@ export default function Overview() {
 
       {campaigns.length === 0 && !loading && (
         <div className="bg-black-4 border border-border-subtle p-12 rounded-card-lg text-center space-y-4">
-           <h3 className="text-xl font-bold text-white">Selamat Datang di KALA</h3>
-           <p className="text-ink-tertiary max-w-md mx-auto">Anda belum memiliki campaign aktif. Mulai dengan membuat campaign baru untuk menganalisis audiens and prediksi box office.</p>
+           <h3 className="text-xl font-bold text-white">Welcome to KALA</h3>
+           <p className="text-ink-tertiary max-w-md mx-auto">You don't have any active campaigns. Start by creating a new campaign to analyze audiences and predict box office.</p>
            <button 
             onClick={() => navigate('/campaigns')}
             className="bg-crimson px-6 py-2 rounded-button font-bold text-white"
            >
-             Buat Campaign Pertama
+             Create First Campaign
            </button>
         </div>
       )}
@@ -103,7 +103,7 @@ export default function Overview() {
               onClick={() => navigate('/campaigns')}
               className="text-[12px] font-medium text-ink-tertiary hover:text-ink-primary transition-colors flex items-center gap-1 group"
             >
-              Lihat semua
+              View all
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
@@ -112,7 +112,7 @@ export default function Overview() {
             {loading ? (
               <div className="py-20 flex flex-col items-center justify-center space-y-4">
                 <Loader2 className="w-8 h-8 text-crimson animate-spin" />
-                <span className="text-ink-tertiary font-mono text-xs uppercase tracking-widest">Memuat Campaign...</span>
+                <span className="text-ink-tertiary font-mono text-xs uppercase tracking-widest">Loading Campaigns...</span>
               </div>
             ) : (
               <table className="w-full text-left border-collapse">

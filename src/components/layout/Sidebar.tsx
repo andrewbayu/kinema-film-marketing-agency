@@ -70,9 +70,9 @@ export default function Sidebar() {
       {/* Brand */}
       <div className="p-6 flex items-center gap-3">
         <img 
-          src="https://storage.googleapis.com/bluestark_explorer/Kala-logo.png" 
+          src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
           alt="Kala Logo" 
-          className="h-6 w-auto" 
+          className="h-5 w-auto" 
           referrerPolicy="no-referrer"
         />
       </div>
@@ -99,9 +99,9 @@ export default function Sidebar() {
         <div>
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">PRODUCTION</div>
           <div className="space-y-1">
-             <NavItem to="/cineforge" icon={Wand2} label="CineForge™" disabled badge="segera" />
-             <NavItem to="/stargraph" icon={Network} label="StarGraph™" disabled badge="segera" />
-             <NavItem to="/fanconvo" icon={MessageCircle} label="FanConvo™" disabled badge="segera" />
+             <NavItem to="/cineforge" icon={Wand2} label="CineForge™" disabled badge="soon" />
+             <NavItem to="/stargraph" icon={Network} label="StarGraph™" disabled badge="soon" />
+             <NavItem to="/fanconvo" icon={MessageCircle} label="FanConvo™" disabled badge="soon" />
           </div>
         </div>
       </div>
@@ -115,11 +115,11 @@ export default function Sidebar() {
           </div>
           <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
           <div className="text-[10px] text-ink-tertiary font-medium">
-            {activeFilm.genre} · Week 4 · T-28 hari
+            {activeFilm.genre} · Week 4 · T-28 days
           </div>
           <button className="mt-4 flex items-center gap-2 text-ink-secondary hover:text-ink-primary transition-colors text-[11px] font-medium group">
             <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
-            Pengaturan
+            Settings
           </button>
         </div>
       )}

@@ -35,8 +35,8 @@ export default function NewCampaignModal({ isOpen, onClose, onSubmit, isLoading 
         >
           <div className="flex items-center justify-between p-6 border-b border-border-subtle bg-black-3/50">
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Campaign Baru</h3>
-              <p className="text-sm text-ink-tertiary">Daftarkan film baru untuk mulai simulasi.</p>
+              <h3 className="text-xl font-bold text-white tracking-tight">New Campaign</h3>
+              <p className="text-sm text-ink-tertiary">Register a new film to start simulation.</p>
             </div>
             <button 
               onClick={onClose}
@@ -50,7 +50,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSubmit, isLoading 
             <FilmProfileForm 
               onSubmit={onSubmit} 
               isLoading={isLoading} 
-              submitLabel="Simpan & Mulai Analisis" 
+              submitLabel="Save & Start Analysis" 
             />
           </div>
         </motion.div>

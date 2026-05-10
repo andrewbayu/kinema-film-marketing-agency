@@ -19,10 +19,10 @@ export default function SegmentCard({ segment }: SegmentCardProps) {
   } = segment;
 
   const scoreDimensions = [
-    { label: 'Skeptisisme', value: behavioralScores.skepticism },
-    { label: 'Identitas', value: behavioralScores.identity },
-    { label: 'Kecemasan', value: behavioralScores.anxiety },
-    { label: 'Pengetahuan', value: behavioralScores.knowledge },
+    { label: 'Skepticism', value: behavioralScores.skepticism },
+    { label: 'Identity', value: behavioralScores.identity },
+    { label: 'Anxiety', value: behavioralScores.anxiety },
+    { label: 'Knowledge', value: behavioralScores.knowledge },
   ];
 
   return (
@@ -67,7 +67,7 @@ export default function SegmentCard({ segment }: SegmentCardProps) {
 
       {/* Behavioral Dimensions */}
       <div className="space-y-4 pt-4 border-t border-border-subtle">
-        <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">ANALISIS PERILAKU</div>
+        <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">BEHAVIORAL ANALYSIS</div>
         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
            {scoreDimensions.map((dim) => (
              <div key={dim.label} className="space-y-1.5">
@@ -86,7 +86,7 @@ export default function SegmentCard({ segment }: SegmentCardProps) {
       {/* Strategy Highlights */}
       <div className="space-y-3 pt-4 border-t border-border-subtle">
          <div>
-            <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-1.5">TRIGGER MEKANISME</div>
+            <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-1.5">TRIGGER MECHANISM</div>
             <p className="text-[12px] text-ink-secondary leading-relaxed font-medium capitalize">{triggerMechanism}</p>
          </div>
          <div>

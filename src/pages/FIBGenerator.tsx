@@ -63,7 +63,7 @@ export default function FIBGenerator() {
       }
     } catch (err) {
       console.error(err);
-      setError('Gagal generate FIB. Silakan coba lagi.');
+      setError('Failed to generate FIB. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -80,21 +80,21 @@ export default function FIBGenerator() {
            <FileText className="w-10 h-10 text-crimson" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-[20px] font-bold text-ink-primary">Data Belum Lengkap</h2>
+          <h2 className="text-[20px] font-bold text-ink-primary">Data Incomplete</h2>
           <p className="text-[14px] text-ink-tertiary">
-            FIB (Film Intelligence Brief) dikompilasi dari output AudienceDNA™ and BoxPredict™. 
-            Silakan selesaikan kedua analisis tersebut sebelum generate FIB.
+            FIB (Film Intelligence Brief) is compiled from the outputs of AudienceDNA™ and BoxPredict™. 
+            Please complete both analyses before generating the FIB.
           </p>
         </div>
         <div className="flex gap-4">
            {!audienceDNAOutput && (
              <button onClick={() => navigate('/audience-dna')} className="px-6 py-2.5 bg-black-4 border border-border-strong text-white rounded-button font-bold hover:bg-black-6 transition-all flex items-center gap-2">
-               Ke AudienceDNA™ →
+               Go to AudienceDNA™ →
              </button>
            )}
            {!boxPredictOutput && (
              <button onClick={() => navigate('/box-predict')} className="px-6 py-2.5 bg-black-4 border border-border-strong text-white rounded-button font-bold hover:bg-black-6 transition-all flex items-center gap-2">
-               Ke BoxPredict™ →
+               Go to BoxPredict™ →
              </button>
            )}
         </div>
@@ -119,8 +119,8 @@ export default function FIBGenerator() {
             >
                <FileType className="w-16 h-16 text-zinc-300 mx-auto" />
                <div className="space-y-1">
-                  <h3 className="text-zinc-600 font-bold text-[18px]">Preview FIB Belum Tersedia</h3>
-                  <p className="text-zinc-400 font-sans text-[14px]">Klik "Generate FIB" di sebelah kanan untuk memulai.</p>
+                  <h3 className="text-zinc-600 font-bold text-[18px]">FIB Preview Not Available</h3>
+                  <p className="text-zinc-400 font-sans text-[14px]">Click "Generate FIB" on the right to start.</p>
                </div>
             </motion.div>
           ) : (
@@ -153,7 +153,7 @@ export default function FIBGenerator() {
                     <div className="font-bold">{activeFilm?.title || 'Unknown Film'}</div>
                  </div>
                  <div className="space-y-1">
-                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">KLIEN</div>
+                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">CLIENT</div>
                     <div className="font-bold">{activeFilm?.client || 'Production House'}</div>
                  </div>
                  <div className="space-y-1">
@@ -165,12 +165,12 @@ export default function FIBGenerator() {
                     <div className="font-bold uppercase">{boxPredictOutput.releaseWindowRecommendation.split(' ')[0]}</div>
                  </div>
                  <div className="space-y-1">
-                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">TANGGAL DIBUAT</div>
-                    <div className="font-bold">{new Date().toLocaleDateString('id-ID')}</div>
+                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">CREATED DATE</div>
+                    <div className="font-bold">{new Date().toLocaleDateString('en-US')}</div>
                  </div>
                  <div className="space-y-1">
-                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">DISIAPKAN OLEH</div>
-                    <div className="font-bold lowercase">Tim KALA — Kata.ai × Samara Group</div>
+                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">PREPARED BY</div>
+                    <div className="font-bold lowercase">KALA Team — Kata.ai × Samara Group</div>
                  </div>
               </div>
 
@@ -178,7 +178,7 @@ export default function FIBGenerator() {
               <div className="space-y-16 py-12">
                  {/* 01 Executive Summary */}
                  <section className="space-y-6">
-                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">01 — RINGKASAN EKSEKUTIF</div>
+                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">01 — EXECUTIVE SUMMARY</div>
                     <p className="text-[16px] leading-[1.6] first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left pt-2">
                        {fibContent.executiveSummary}
                     </p>
@@ -186,25 +186,25 @@ export default function FIBGenerator() {
 
                  {/* 02 Audience Profile */}
                  <section className="space-y-6">
-                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">02 — PROFIL PENONTON</div>
+                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">02 — AUDIENCE PROFILE</div>
                     <p className="text-[16px] leading-[1.6]">
                        {fibContent.audienceAnalysis}
                     </p>
                     <div className="grid grid-cols-2 gap-8 pt-4">
                        <div className="p-6 bg-zinc-50 border border-zinc-100 space-y-3">
-                          <div className="text-[11px] font-sans font-bold text-zinc-400 uppercase tracking-widest">SEGMEN PRIMER</div>
+                          <div className="text-[11px] font-sans font-bold text-zinc-400 uppercase tracking-widest">PRIMARY SEGMENT</div>
                           <div className="text-[18px] font-bold tracking-tight">{audienceDNAOutput.primarySegment}</div>
                        </div>
                        <div className="p-6 bg-zinc-50 border border-zinc-100 space-y-3">
-                          <div className="text-[11px] font-sans font-bold text-zinc-400 uppercase tracking-widest">LANDSCAPE PENONTON</div>
-                          <div className="text-[14px] leading-relaxed italic text-zinc-600">Teridentifikasi {audienceDNAOutput.segments.length} cluster utama potensial.</div>
+                          <div className="text-[11px] font-sans font-bold text-zinc-400 uppercase tracking-widest">AUDIENCE LANDSCAPE</div>
+                          <div className="text-[14px] leading-relaxed italic text-zinc-600">Identified {audienceDNAOutput.segments.length} potential main clusters.</div>
                        </div>
                     </div>
                  </section>
 
                  {/* 03 Box Office Projection */}
                  <section className="space-y-6">
-                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">03 — PROYEKSI BOX OFFICE</div>
+                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">03 — BOX OFFICE PROJECTION</div>
                     <p className="text-[16px] leading-[1.6]">
                        {fibContent.boxOfficeAnalysis}
                     </p>
@@ -221,7 +221,7 @@ export default function FIBGenerator() {
 
                  {/* 04 Next Steps */}
                  <section className="space-y-6">
-                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">04 — LANGKAH BERIKUTNYA</div>
+                    <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">04 — NEXT STEPS</div>
                     <ul className="space-y-4 list-none pl-0">
                        {fibContent.nextSteps.map((step, i) => (
                          <li key={i} className="flex gap-4 items-start text-[16px] leading-relaxed">
@@ -236,15 +236,15 @@ export default function FIBGenerator() {
               {/* Methodology and Footer */}
               <div className="pt-20 border-t-4 border-black font-sans space-y-10">
                  <div className="space-y-4">
-                    <div className="text-[11px] font-bold uppercase tracking-widest">CATATAN METODOLOGI</div>
+                    <div className="text-[11px] font-bold uppercase tracking-widest">METHODOLOGY NOTES</div>
                     <p className="text-[12px] text-zinc-500 leading-relaxed italic">
-                       FIB ini dibuat berdasarkan informasi yang tersedia pada {new Date().toLocaleDateString()}. Proyeksi adalah estimasi probabilistik, bukan jaminan. 
+                       This FIB was created based on information available on {new Date().toLocaleDateString()}. Projections are probabilistic estimates, not guarantees. 
                        {fibContent.methodologyNote}
                     </p>
                  </div>
                  <div className="flex justify-between items-end">
                     <div className="text-[10px] font-bold text-zinc-300">KALA · Kata.ai × Samara Group · Confidential</div>
-                    <div className="text-[10px] font-bold text-zinc-300">HALAMAN 01 dari 01</div>
+                    <div className="text-[10px] font-bold text-zinc-300">PAGE 01 of 01</div>
                  </div>
               </div>
             </motion.div>
@@ -256,7 +256,7 @@ export default function FIBGenerator() {
       <aside className="space-y-6 print:hidden">
         <div className="bg-black-4 border border-border-subtle rounded-card-lg p-6 space-y-8">
            <div className="space-y-4">
-              <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">STATUS DOKUMEN</div>
+              <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">DOCUMENT STATUS</div>
               <div className="flex items-center justify-between">
                  <span className={cn(
                    "px-2.5 py-1 rounded-badge text-[10px] font-mono font-bold border",
@@ -313,7 +313,7 @@ export default function FIBGenerator() {
 
               <div className="flex items-center gap-2 px-3 py-2 bg-orange-glow/10 border border-orange-kala/20 rounded text-orange-kala text-[11px] font-medium italic">
                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                 PDF format menggunakan stylsheet khusus (print-only)
+                 PDF format uses a special stylesheet (print-only)
               </div>
            </div>
         </div>
@@ -323,7 +323,7 @@ export default function FIBGenerator() {
           className="w-full flex items-center justify-center gap-2 text-ink-tertiary hover:text-ink-primary transition-colors text-[13px] font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
-          Kembali ke BoxPredict™
+          Back to BoxPredict™
         </button>
       </aside>
     </div>

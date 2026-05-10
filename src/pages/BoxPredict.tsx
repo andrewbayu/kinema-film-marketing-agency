@@ -67,7 +67,7 @@ export default function BoxPredict() {
       }
     } catch (err) {
       console.error(err);
-      setError('Gagal menjalankan simulasi BoxPredict™. Silakan coba lagi.');
+      setError('Failed to run BoxPredict™ simulation. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -80,17 +80,17 @@ export default function BoxPredict() {
            <Users className="w-10 h-10 text-crimson" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-[20px] font-bold text-ink-primary">AudienceDNA™ Belum Lengkap</h2>
+          <h2 className="text-[20px] font-bold text-ink-primary">AudienceDNA™ Incomplete</h2>
           <p className="text-[14px] text-ink-tertiary">
-            BoxPredict™ membutuhkan konteks audiens untuk melakukan simulasi yang akurat. 
-            Silakan jalankan analisis AudienceDNA™ terlebih dahulu.
+            BoxPredict™ requires audience context for accurate simulations. 
+            Please run AudienceDNA™ analysis first.
           </p>
         </div>
         <button 
           onClick={() => navigate('/audience-dna')}
           className="px-8 py-3 bg-crimson text-white rounded-button font-bold hover:bg-crimson-rich transition-all flex items-center gap-2"
         >
-          Ke AudienceDNA™
+          Go to AudienceDNA™
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
@@ -103,7 +103,7 @@ export default function BoxPredict() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h2 className="text-[20px] font-bold text-ink-primary">BoxPredict™ Simulation</h2>
-          <p className="text-[13px] text-ink-tertiary">Prediksi admissions & optimasi rilis melalui simulasi skenario AI.</p>
+          <p className="text-[13px] text-ink-tertiary">Predict admissions & optimize releases through AI scenario simulations.</p>
         </div>
         {activeFilm && (
           <span className="text-[10px] font-mono bg-crimson/10 text-crimson px-2 py-1 rounded border border-crimson/20">
@@ -140,8 +140,8 @@ export default function BoxPredict() {
                   </div>
                </div>
                <div className="text-center space-y-2">
-                 <h3 className="text-[18px] font-bold text-ink-primary">AI Menganalisis Skenario</h3>
-                 <p className="text-[14px] text-ink-tertiary max-w-sm">Memperhitungkan multipliers, kompetisi, dan resonansi audiens... (est. 8 detik)</p>
+                 <h3 className="text-[18px] font-bold text-ink-primary">AI Analyzing Scenario</h3>
+                 <p className="text-[14px] text-ink-tertiary max-w-sm">Calculating multipliers, competition, and audience resonance... (est. 8 seconds)</p>
                </div>
              </motion.div>
           ) : boxPredictOutput ? (
@@ -187,7 +187,7 @@ export default function BoxPredict() {
                    </div>
 
                    <div className="pt-6 border-t border-border-subtle space-y-3">
-                      <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">REKOMENDASI WINDOW</div>
+                      <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">WINDOW RECOMMENDATION</div>
                       <p className="text-[13px] text-green-kala font-medium leading-relaxed">
                         {boxPredictOutput.releaseWindowRecommendation}
                       </p>
@@ -215,8 +215,8 @@ export default function BoxPredict() {
                  <TrendingUp className="w-8 h-8 text-ink-tertiary" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-[16px] font-bold text-ink-secondary">Siap untuk simulasi</h3>
-                <p className="text-[13px] text-ink-tertiary">Klik tombol di atas untuk menjalankan prediksi box office.</p>
+                <h3 className="text-[16px] font-bold text-ink-secondary">Ready for simulation</h3>
+                <p className="text-[13px] text-ink-tertiary">Click the button above to run the box office prediction.</p>
               </div>
             </div>
           )}

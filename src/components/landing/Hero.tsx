@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 
 export default function Hero() {
   const { ref, isVisible } = useScrollAnimation();
+  const navigate = useNavigate();
 
   return (
     <section 
@@ -61,11 +63,14 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 1, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-wrap gap-5"
           >
-            <button className="bg-crimson hover:bg-crimson-rich text-white-primary px-8 py-4 rounded-full font-semibold text-[15px] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-crimson/20">
-              Ceritakan Film Kamu →
+            <button 
+              onClick={() => navigate('/discussion')}
+              className="bg-crimson hover:bg-crimson-rich text-white-primary px-8 py-4 rounded-full font-semibold text-[15px] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-crimson/20"
+            >
+              Talk with KALA →
             </button>
             <button className="bg-transparent border border-border-default hover:border-border-strong text-white-primary px-8 py-4 rounded-full font-semibold text-[15px] transition-all">
-              Lihat Cara Kerjanya
+              How it Works
             </button>
           </motion.div>
 

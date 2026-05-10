@@ -1,6 +1,6 @@
 {
-  "name": "KALA Internal Dashboard",
-  "description": "Production-grade internal dashboard for KALA film marketing agency, powered by AudienceDNA™ and BoxPredict™ AI tools.",
+  "name": "KALA Film Marketing Agency",
+  "description": "KALA is fullstack AI-native marketing agency build for cinemaverse.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

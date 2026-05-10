@@ -11,13 +11,13 @@ export default function ClientPortal() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-[450px_1fr] gap-20 items-center">
         <div className="space-y-10">
           <div className="space-y-4">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white-tertiary font-bold block">Transparansi penuh</span>
-            <h2 className="text-[48px] font-bold text-white-primary leading-tight tracking-tighter">Kamu tidak perlu percaya kata-kata kami. Lihat sendiri.</h2>
+            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white-tertiary font-bold block">Total Transparency</span>
+            <h2 className="text-[48px] font-bold text-white-primary leading-tight tracking-tighter">You don't have to take our word for it. See for yourself.</h2>
           </div>
           
           <p className="text-[17px] text-white-secondary leading-relaxed">
-            Setiap klien KALA punya akses ke dashboard yang menampilkan semua yang sedang berjalan — secara real-time, kapanpun kamu mau buka.<br /><br />
-            Tidak perlu tunggu laporan mingguan. Tidak perlu tanya "update gimana?" Semua ada di satu tempat.
+            Every KALA client has access to a dashboard displaying everything in progress — in real-time, whenever you want to open it.<br /><br />
+            No need to wait for weekly reports. No need to ask "what's the update?" Everything is in one place.
           </p>
         </div>
 
@@ -67,13 +67,13 @@ export default function ClientPortal() {
                         <div className="w-2 h-2 rounded-full bg-crimson" />
                         KALA CLIENT PORTAL
                       </div>
-                      <div className="text-[10px] font-mono text-white-tertiary">[Nama Film — Confidential] · T-14 hari rilis</div>
+                      <div className="text-[10px] font-mono text-white-tertiary">[Film Name — Confidential] · T-14 days to release</div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                       <MetricCard label="Total Mention" value="2.4M" />
+                       <MetricCard label="Total Mentions" value="2.4M" />
                        <MetricCard label="Trailer Views" value="18.7M" />
-                       <MetricCard label="Impression" value="94.3M" />
+                       <MetricCard label="Impressions" value="94.3M" />
                        <MetricCard label="Forecast" value="↑ On track" />
                     </div>
 
@@ -90,9 +90,9 @@ export default function ClientPortal() {
                     <div className="space-y-3 pt-6">
                        <div className="text-[10px] font-mono text-white-tertiary font-bold uppercase tracking-widest">RECENT ACTIVITY</div>
                        {[
-                         'KOL drop batch 2 selesai — 847K impression',
-                         'Trailer velocity D+7: 0.68 (di atas baseline genre)',
-                         '[Download Laporan Mingguan]'
+                         'KOL drop batch 2 complete — 847K impressions',
+                         'Trailer velocity D+7: 0.68 (above genre baseline)',
+                         '[Download Weekly Report]'
                        ].map((activity, i) => (
                          <div key={i} className="flex items-center gap-3 text-[12px] text-white-secondary bg-white/5 p-3 rounded border border-white/5">
                             <div className="w-1.5 h-1.5 rounded-full bg-crimson/50" />
@@ -113,15 +113,15 @@ export default function ClientPortal() {
                      <div className="flex justify-between items-center border-b border-white/5 pb-6">
                       <div className="flex items-center gap-2 text-crimson font-mono text-[10px] font-bold">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        LIVE TICKER · Update terakhir: 14 menit lalu
+                        LIVE TICKER · Last updated: 14 minutes ago
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                       <MetricCard label="Est. Admission" value="847.000" />
+                       <MetricCard label="Est. Admissions" value="847.000" />
                        <MetricCard label="Est. Revenue" value="Rp 12.4 M" />
                        <MetricCard label="Avg Occupancy" value="71%" />
-                       <MetricCard label="Trend" value="↑ Naik" />
+                       <MetricCard label="Trend" value="↑ Rising" />
                     </div>
 
                     <div className="space-y-6 pt-6">
@@ -143,7 +143,7 @@ export default function ClientPortal() {
                        ))}
                     </div>
 
-                    <p className="text-[10px] font-mono text-white-tertiary italic text-center pt-4">Data diperbarui setiap 4–6 jam dari jaringan bioskop nasional.</p>
+                    <p className="text-[10px] font-mono text-white-tertiary italic text-center pt-4">Data updated every 4–6 hours from the national cinema network.</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -151,7 +151,7 @@ export default function ClientPortal() {
           </div>
           
           <div className="text-center mt-8">
-            <p className="text-[15px] text-white-tertiary font-medium">Laporan lengkap bisa diunduh kapanpun — dalam format yang bisa langsung dibawa ke rapat direksi.</p>
+            <p className="text-[15px] text-white-tertiary font-medium">Full reports can be downloaded at any time — in a format ready for the boardroom.</p>
           </div>
         </motion.div>
       </div>

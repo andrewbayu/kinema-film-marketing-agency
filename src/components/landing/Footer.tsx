@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function Footer() {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <footer className="py-24 px-6 border-t border-border-subtle bg-black-1">
@@ -11,9 +13,9 @@ export default function Footer() {
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <img 
-                src="https://storage.googleapis.com/bluestark_explorer/Kala-logo.png" 
+                src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
                 alt="Kala Logo" 
-                className="h-6 w-auto opacity-80 hover:opacity-100 transition-opacity" 
+                className="h-5 w-auto opacity-80 hover:opacity-100 transition-opacity" 
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -33,9 +35,9 @@ export default function Footer() {
           </div>
 
           <div className="space-y-6">
-            <h4 className="font-mono text-[10px] font-bold text-white-tertiary uppercase tracking-widest">Perusahaan</h4>
+            <h4 className="font-mono text-[10px] font-bold text-white-tertiary uppercase tracking-widest">Company</h4>
             <ul className="space-y-4 text-[13px] font-medium text-white-secondary">
-              {['Cara Kerja', 'Tentang Kami', 'Tulisan & Insight', 'Kontak'].map(link => (
+              {['How it Works', 'About Us', 'Writing & Insights', 'Contact'].map(link => (
                 <li key={link}><a href="#" className="hover:text-white-primary transition-colors">{link}</a></li>
               ))}
             </ul>
@@ -47,14 +49,17 @@ export default function Footer() {
               <li><a href="mailto:hello@kala.id" className="hover:text-white-primary transition-colors">hello@kala.id</a></li>
               <li><a href="#" className="hover:text-white-primary transition-colors">LinkedIn</a></li>
               <li><a href="#" className="hover:text-white-primary transition-colors">Instagram</a></li>
-              <li><button onClick={login} className="text-crimson font-bold">Mulai Percakapan →</button></li>
+              <li><button onClick={() => navigate('/discussion')} className="text-crimson font-bold">Talk with KALA →</button></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[11px] font-mono text-white-tertiary italic">© 2026 KALA. Hak cipta dilindungi.</p>
-          <p className="text-[11px] font-mono text-white-tertiary font-bold uppercase tracking-widest">Khusus film Indonesia.</p>
+          <div className="flex items-center gap-6">
+            <p className="text-[11px] font-mono text-white-tertiary italic">© 2026 KALA. All rights reserved.</p>
+            <button onClick={login} className="text-[10px] font-mono text-white-tertiary/40 hover:text-white-tertiary transition-colors uppercase tracking-widest">Client Login</button>
+          </div>
+          <p className="text-[11px] font-mono text-white-tertiary font-bold uppercase tracking-widest">Exclusively for Indonesian cinema.</p>
         </div>
       </div>
     </footer>

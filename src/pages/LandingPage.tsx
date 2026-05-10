@@ -23,14 +23,19 @@ export default function LandingPage() {
 
         <StatsStrip />
 
-        <TransitionText text={`Rata-rata film Indonesia menghabiskan\nRp 2–5 miliar untuk marketing dan promosi.\n\n90% tidak balik modal.\n\nDan tim marketing-nya bertanya-tanya:\n"sebenernya yang salah di mana?"`} />
+        <TransitionText text={`The average Indonesian film spends\nIDR 2–5 billion on marketing and promotion.\n\n90% do not break even.\n\nAnd their marketing team is left wondering:\n"where exactly did we go wrong?"`} />
 
         {/* Stage 2: The Problem */}
         <div id="problem">
           <Problem />
         </div>
 
-        <TransitionText text={`That's why KALA exist.\nFounded by the best of minds and experts\nin AI & Digital Marketing Industry.`} blackout />
+        <TransitionText 
+          text={`That's why KALA exist.\nFounded by the best of minds and experts\nin AI & Digital Marketing Industry.`} 
+          blackout 
+          bgImage="https://storage.googleapis.com/bluestark_explorer/wallpaper-kalaos-2.png"
+          showLogo
+        />
 
         {/* Stage 3: The Technology (Evidence) */}
         <div id="technology">
@@ -42,14 +47,22 @@ export default function LandingPage() {
           <ClientPortal />
         </div>
 
-        <TransitionText text="Semua ini bekerja bersama untuk satu tujuan." />
+        <TransitionText 
+          text="It all works together for one goal." 
+          blackout
+          bgImage="https://storage.googleapis.com/bluestark_explorer/kala-os-wp3.png"
+        />
 
         {/* Stage 5: The Process */}
         <div id="how-it-works">
           <HowItWorks />
         </div>
 
-        <TransitionText text="Filmmu sudah ada. Penontonnya juga." blackout />
+        <TransitionText 
+          text="Your film is here. Your audience is too." 
+          blackout 
+          bgImage="https://storage.googleapis.com/bluestark_explorer/kala-os-wp4.png"
+        />
 
         {/* Stage 6: Final Decision */}
         <div id="cta">

@@ -45,7 +45,7 @@ export default function AudienceDNA() {
       }
     } catch (err) {
       console.error(err);
-      setError('Gagal menjalankan analisis AI. Silakan coba lagi.');
+      setError('Failed to run AI analysis. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,20 +57,20 @@ export default function AudienceDNA() {
       <aside className="space-y-6">
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <h2 className="text-[20px] font-bold text-ink-primary">Input Profil Film</h2>
+            <h2 className="text-[20px] font-bold text-ink-primary">Film Profile Input</h2>
             {activeFilm && (
               <span className="text-[10px] font-mono bg-crimson/10 text-crimson px-2 py-0.5 rounded border border-crimson/20">
                 CAMPAIGN: {activeFilm.title}
               </span>
             )}
           </div>
-          <p className="text-[13px] text-ink-tertiary">Lengkapi detail untuk AudienceDNA™</p>
+          <p className="text-[13px] text-ink-tertiary">Complete details for AudienceDNA™</p>
         </div>
         <div className="bg-black-4 border border-border-subtle p-6 rounded-card-lg">
           <FilmProfileForm 
             onSubmit={handleAnalyze} 
             isLoading={loading}
-            submitLabel="Analisis Audiens →"
+            submitLabel="Analyze Audience →"
           />
         </div>
         
@@ -97,8 +97,8 @@ export default function AudienceDNA() {
                  <Users className="w-8 h-8 text-ink-tertiary" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-[16px] font-bold text-ink-secondary">Belum ada data</h3>
-                <p className="text-[13px] text-ink-tertiary">Isi profil film di sebelah kiri dan klik "Analisis Audiens".</p>
+                <h3 className="text-[16px] font-bold text-ink-secondary">No data yet</h3>
+                <p className="text-[13px] text-ink-tertiary">Fill in the film profile on the left and click "Analyze Audience".</p>
               </div>
             </motion.div>
           ) : loading ? (
@@ -116,8 +116,8 @@ export default function AudienceDNA() {
                   </div>
                </div>
                <div className="text-center space-y-2">
-                 <h3 className="text-[18px] font-bold text-ink-primary">AI Sedang Bekerja</h3>
-                 <p className="text-[14px] text-ink-tertiary max-w-sm">Menganalisis profil penonton Indonesia berdasarkan dataset KALA... (est. 5 detik)</p>
+                 <h3 className="text-[18px] font-bold text-ink-primary">AI is Working</h3>
+                 <p className="text-[14px] text-ink-tertiary max-w-sm">Analyzing Indonesian audience profiles based on the KALA dataset... (est. 5 seconds)</p>
                </div>
              </motion.div>
           ) : (
@@ -130,7 +130,7 @@ export default function AudienceDNA() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-3">
-                    <h2 className="text-[18px] font-bold text-ink-primary uppercase tracking-tight">SEGMEN TERIDENTIFIKASI</h2>
+                    <h2 className="text-[18px] font-bold text-ink-primary uppercase tracking-tight">IDENTIFIED SEGMENTS</h2>
                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-black-6 border border-border-subtle rounded font-mono text-[10px] text-ink-tertiary">
                       <History className="w-3 h-3" />
                       AUTOSAVED
@@ -147,7 +147,7 @@ export default function AudienceDNA() {
               </div>
 
               <div className="bg-black-4 border border-border-subtle rounded-card-lg p-8 space-y-4">
-                <h3 className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">INSIGHT UTAMA</h3>
+                <h3 className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">KEY INSIGHT</h3>
                 <p className="text-[15px] text-ink-primary leading-relaxed font-body whitespace-pre-wrap">
                   {audienceDNAOutput.insight}
                 </p>
@@ -158,7 +158,7 @@ export default function AudienceDNA() {
                   onClick={() => navigate('/box-predict')}
                   className="flex-1 py-4 bg-crimson text-white rounded-button font-bold flex items-center justify-center gap-2 hover:bg-crimson-rich transition-colors"
                  >
-                   Lanjut ke BoxPredict™
+                   Continue to BoxPredict™
                    <ChevronRight className="w-5 h-5" />
                  </button>
                  <button className="flex-1 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors">

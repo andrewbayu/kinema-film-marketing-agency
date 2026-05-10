@@ -17,7 +17,7 @@ export default function LiveTicker() {
       // Simulate real-time update
       setTickerData(prev => ({
         ...prev,
-        lastUpdated: 'Baru saja',
+        lastUpdated: 'Just now',
         totalAdmission: prev.totalAdmission + Math.floor(Math.random() * 50),
         avgOccupancy: Math.min(100, Math.max(0, prev.avgOccupancy + (Math.random() > 0.5 ? 1 : -1)))
       }));
@@ -64,7 +64,7 @@ export default function LiveTicker() {
         <MetricCard 
           label="Est. Total Admission"
           value={formatNumber(tickerData.totalAdmission)}
-          sub="Harian · Terakumulasi"
+          sub="Daily · Accumulated"
           valueColor="green"
         />
         <MetricCard 
@@ -76,23 +76,23 @@ export default function LiveTicker() {
         <MetricCard 
           label="Avg Occupancy"
           value={`${tickerData.avgOccupancy}%`}
-          sub="640 Studio Nasional"
+          sub="640 National Studios"
           valueColor={tickerData.avgOccupancy < 60 ? 'orange' : 'default'}
         />
         <MetricCard 
-          label="Trend Per Jam"
-          value={tickerData.trend === 'up' ? '↑ NAIK' : tickerData.trend === 'down' ? '↓ TURUN' : '→ STABIL'}
-          sub="Berdasarkan booking pace"
+          label="Hourly Trend"
+          value={tickerData.trend === 'up' ? '↑ UP' : tickerData.trend === 'down' ? '↓ DOWN' : '→ STEADY'}
+          sub="Based on booking pace"
           valueColor={tickerData.trend === 'up' ? 'green' : tickerData.trend === 'down' ? 'crimson' : 'default'}
         />
       </div>
 
       {/* City Table */}
       <div className="space-y-4">
-        <div className="text-[11px] font-mono font-bold text-ink-tertiary uppercase tracking-widest pl-2">KOTA DENGAN OCCUPANCY TERTINGGI</div>
+        <div className="text-[11px] font-mono font-bold text-ink-tertiary uppercase tracking-widest pl-2">CITIES WITH HIGHEST OCCUPANCY</div>
         <div className="bg-black-4 border border-border-subtle rounded-card-lg overflow-hidden pb-4">
           <div className="grid grid-cols-[1fr_200px_80px_60px_100px] gap-6 px-6 py-4 border-b border-border-subtle text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest bg-black-3/50">
-            <div>Kota</div>
+            <div>City</div>
             <div>Visual Load</div>
             <div className="text-center">Load %</div>
             <div className="text-center">Trend</div>
@@ -111,11 +111,11 @@ export default function LiveTicker() {
       <div className="pt-10 border-t border-border-subtle flex flex-col items-center gap-4 text-center">
          <div className="flex items-center gap-2 text-[10px] font-mono text-ink-tertiary">
             <Clock className="w-3 h-3" />
-            DATA DIPERBARUI SETIAP 4–6 JAM DARI TIX ID, M-TIX, DAN CGV.
+            DATA UPDATED EVERY 4–6 HOURS FROM TIX ID, M-TIX, AND CGV.
          </div>
          <p className="text-[12px] text-ink-tertiary italic max-w-lg">
-            Terakhir diperbarui: {new Date().toLocaleString('id-ID')} WIB. 
-            Proyeksi occupancy dihitung menggunakan model prediktif KALA berdasarkan velocity booking saat ini.
+            Last updated: {new Date().toLocaleString('en-US')} WIB. 
+            Occupancy projections are calculated using KALA's predictive model based on current booking velocity.
          </p>
       </div>
     </div>

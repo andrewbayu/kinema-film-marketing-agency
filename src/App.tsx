@@ -15,6 +15,7 @@ import BoxPredict from './pages/BoxPredict';
 import LiveTicker from './pages/LiveTicker';
 import FIBGenerator from './pages/FIBGenerator';
 import LandingPage from './pages/LandingPage';
+import Discussion from './pages/Discussion';
 import { LogIn } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="live-ticker" element={<LiveTicker />} />
               <Route path="fib/:filmId" element={<FIBGenerator />} />
             </Route>
+            <Route path="/discussion" element={<Discussion />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </FilmProvider>

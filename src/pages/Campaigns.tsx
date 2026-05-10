@@ -95,15 +95,15 @@ export default function Campaigns() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-[24px] font-bold text-ink-primary tracking-tight">Semua Campaign</h2>
-          <p className="text-[14px] text-ink-tertiary">Kelola dan monitor semua aktivitas marketing per film.</p>
+          <h2 className="text-[24px] font-bold text-ink-primary tracking-tight">All Campaigns</h2>
+          <p className="text-[14px] text-ink-tertiary">Manage and monitor all marketing activities per film.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="bg-crimson hover:bg-crimson-rich text-white px-6 py-2.5 rounded-button font-bold text-[14px] flex items-center gap-2 transition-all active:scale-[0.98]"
         >
            <Plus className="w-4 h-4" />
-           Campaign Baru
+           New Campaign
         </button>
       </div>
 
@@ -130,7 +130,7 @@ export default function Campaigns() {
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-tertiary" />
            <input 
             type="text"
-            placeholder="Cari film..."
+            placeholder="Search film..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-black-2 border border-border-default rounded-card-sm pl-11 pr-4 py-2.5 text-[14px] text-ink-primary focus:border-crimson outline-none transition-all"
@@ -151,7 +151,7 @@ export default function Campaigns() {
                 <tr className="border-b border-border-subtle bg-black-3/50 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">
                   <th className="px-6 py-4">Film + Genre</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Tanggal Dibuat</th>
+                  <th className="px-6 py-4">Created Date</th>
                   <th className="px-6 py-4 min-w-[200px]">Progress</th>
                 </tr>
               </thead>
@@ -173,7 +173,7 @@ export default function Campaigns() {
                     </td>
                     <td className="px-6 py-5">
                       <span className="text-[13px] font-medium text-ink-secondary">
-                        {film.createdAt?.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {film.createdAt?.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
                     </td>
                     <td className="px-6 py-5">
@@ -190,7 +190,7 @@ export default function Campaigns() {
                 )) : (
                   <tr>
                      <td colSpan={6} className="px-6 py-20 text-center text-ink-tertiary font-medium">
-                        {searchTerm ? `Tidak ada campaign ditemukan untuk "${searchTerm}"` : "Belum ada campaign. Buat baru untuk memulai."}
+                        {searchTerm ? `No campaigns found for "${searchTerm}"` : "No campaigns yet. Create new to start."}
                      </td>
                   </tr>
                 )}

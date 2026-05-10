@@ -10,18 +10,24 @@ interface FilmProfileFormProps {
 }
 
 const GENRES: GenreOption[] = [
-  'Horror Supernatural', 'Drama Romantis', 'Komedi', 'Keluarga / Animasi', 'Thriller / Crime', 'Biopic', 'Action'
+  'Supernatural Horror',
+  'Romantic Drama',
+  'Comedy',
+  'Family / Animation',
+  'Thriller / Crime',
+  'Biopic',
+  'Action'
 ];
 
 const BUDGET_TIERS: { value: BudgetTier; label: string }[] = [
-  { value: 'indie', label: 'Indie (< Rp 5M)' },
-  { value: 'mid', label: 'Mid (Rp 5–30M)' },
-  { value: 'major', label: 'Major (Rp 30M+)' }
+  { value: 'indie', label: 'Indie (< IDR 5B)' },
+  { value: 'mid', label: 'Mid (IDR 5–30B)' },
+  { value: 'major', label: 'Major (IDR 30B+)' }
 ];
 
 const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
-  { value: 'lebaran', label: 'Lebaran (2.2x)' },
-  { value: 'nataru', label: 'Nataru (1.6x)' },
+  { value: 'lebaran', label: 'Eid al-Fitr (2.2x)' },
+  { value: 'nataru', label: 'Christmas & New Year (1.6x)' },
   { value: 'long-weekend', label: 'Long Weekend (1.3x)' },
   { value: 'regular', label: 'Regular (1.0x)' },
   { value: 'ramadan', label: 'Ramadan (0.5x)' }
@@ -29,10 +35,10 @@ const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
 
 const IP_TYPES: { value: IPType; label: string }[] = [
   { value: 'original', label: 'Original' },
-  { value: 'adaptasi-kecil', label: 'Adaptasi Kecil' },
-  { value: 'adaptasi-populer', label: 'Adaptasi Populer' },
+  { value: 'minor-adaptation', label: 'Minor Adaptation' },
+  { value: 'popular-adaptation', label: 'Popular Adaptation' },
   { value: 'major-ip', label: 'Major IP' },
-  { value: 'sekuel', label: 'Sekuel' }
+  { value: 'sequel', label: 'Sequel' }
 ];
 
 export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Submit" }: FilmProfileFormProps) {
@@ -48,10 +54,10 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Judul Film</label>
+          <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Film Title</label>
           <input 
-            {...register('title', { required: 'Judul wajib diisi' })}
-            placeholder="Contoh: Sayap Patah"
+            {...register('title', { required: 'Title is required' })}
+            placeholder="e.g., Broken Wings"
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson focus:ring-1 focus:ring-crimson outline-none transition-all placeholder:text-ink-tertiary/50"
           />
           {errors.title && <span className="text-[10px] text-crimson mt-1 ml-1">{errors.title.message}</span>}
@@ -104,7 +110,7 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
           <textarea 
             {...register('logline', { required: true })}
             rows={3}
-            placeholder="Ringkasan cerita film dalam satu kalimat..."
+            placeholder="Film story summary in one sentence..."
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors resize-none placeholder:text-ink-tertiary/50"
           />
         </div>
@@ -113,16 +119,16 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
            <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Lead Cast</label>
            <input 
             {...register('leadCast', { required: true })}
-            placeholder="Contoh: Reza Rahadian, Putri Marino"
+            placeholder="e.g., Reza Rahadian, Putri Marino"
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors placeholder:text-ink-tertiary/50"
           />
         </div>
 
         <div>
-           <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Sutradara (Opsional)</label>
+           <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Director (Optional)</label>
            <input 
             {...register('director')}
-            placeholder="Nama Sutradara"
+            placeholder="Director Name"
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors placeholder:text-ink-tertiary/50"
           />
         </div>
@@ -141,7 +147,7 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
         {isLoading ? (
           <>
             <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            Menganalisis...
+            Analyzing...
           </>
         ) : submitLabel}
       </button>

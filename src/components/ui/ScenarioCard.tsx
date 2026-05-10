@@ -13,17 +13,17 @@ export default function ScenarioCard({ type, data }: ScenarioCardProps) {
     bear: {
       color: 'bg-orange-kala',
       icon: TrendingDown,
-      title: 'PESIMIS (P25)'
+      title: 'PESSIMISTIC (P25)'
     },
     base: {
       color: 'bg-crimson',
       icon: Minus,
-      title: 'REALISTIS (P50)'
+      title: 'REALISTIC (P50)'
     },
     bull: {
       color: 'bg-green-kala',
       icon: TrendingUp,
-      title: 'OPTIMIS (P75)'
+      title: 'OPTIMISTIC (P75)'
     }
   };
 
@@ -65,8 +65,8 @@ export default function ScenarioCard({ type, data }: ScenarioCardProps) {
              <span className="text-[10px] font-mono text-ink-tertiary uppercase font-bold tracking-tight">CONFIDENCE LEVEL</span>
              <span className={cn(
                "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border",
-               data.confidence === 'Tinggi' ? 'text-green-kala border-green-kala/20' :
-               data.confidence === 'Sedang' ? 'text-orange-kala border-orange-kala/20' :
+               data.confidence === 'High' ? 'text-green-kala border-green-kala/20' :
+               data.confidence === 'Medium' ? 'text-orange-kala border-orange-kala/20' :
                'text-crimson border-crimson/20'
              )}>
                {data.confidence.toUpperCase()}

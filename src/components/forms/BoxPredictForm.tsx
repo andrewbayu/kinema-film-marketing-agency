@@ -9,18 +9,24 @@ interface BoxPredictFormProps {
 }
 
 const GENRES: GenreOption[] = [
-  'Horror Supernatural', 'Drama Romantis', 'Komedi', 'Keluarga / Animasi', 'Thriller / Crime', 'Biopic', 'Action'
+  'Supernatural Horror',
+  'Romantic Drama',
+  'Comedy',
+  'Family / Animation',
+  'Thriller / Crime',
+  'Biopic',
+  'Action'
 ];
 
 const BUDGET_TIERS: { value: BudgetTier; label: string }[] = [
-  { value: 'indie', label: 'Indie (< Rp 5M)' },
-  { value: 'mid', label: 'Mid (Rp 5–30M)' },
-  { value: 'major', label: 'Major (Rp 30M+)' }
+  { value: 'indie', label: 'Indie (< IDR 5B)' },
+  { value: 'mid', label: 'Mid (IDR 5–30B)' },
+  { value: 'major', label: 'Major (IDR 30B+)' }
 ];
 
 const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
-  { value: 'lebaran', label: 'Lebaran (2.2x)' },
-  { value: 'nataru', label: 'Nataru (1.6x)' },
+  { value: 'lebaran', label: 'Eid al-Fitr (2.2x)' },
+  { value: 'nataru', label: 'Christmas & New Year (1.6x)' },
   { value: 'long-weekend', label: 'Long Weekend (1.3x)' },
   { value: 'regular', label: 'Regular (1.0x)' },
   { value: 'ramadan', label: 'Ramadan (0.5x)' }
@@ -28,10 +34,10 @@ const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
 
 const IP_TYPES: { value: IPType; label: string }[] = [
   { value: 'original', label: 'Original' },
-  { value: 'adaptasi-kecil', label: 'Adaptasi Kecil' },
-  { value: 'adaptasi-populer', label: 'Adaptasi Populer' },
+  { value: 'minor-adaptation', label: 'Minor Adaptation' },
+  { value: 'popular-adaptation', label: 'Popular Adaptation' },
   { value: 'major-ip', label: 'Major IP' },
-  { value: 'sekuel', label: 'Sekuel' }
+  { value: 'sequel', label: 'Sequel' }
 ];
 
 export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormProps) {
@@ -53,11 +59,11 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
         
         {/* Basic Info Column */}
         <div className="space-y-6">
-          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest border-b border-border-subtle pb-2">PROFIL PRODUKSI</div>
+          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest border-b border-border-subtle pb-2">PRODUCTION PROFILE</div>
           
           <div className="grid grid-cols-2 gap-4">
              <div className="col-span-2">
-                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Judul Film</label>
+                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Film Title</label>
                 <input {...register('title', { required: true })} className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
              </div>
              <div>
@@ -98,11 +104,11 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
 
         {/* Release & Marketing Column */}
         <div className="space-y-6">
-          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest border-b border-border-subtle pb-2">STRATEGI RILIS & SINYAL</div>
+          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest border-b border-border-subtle pb-2">RELEASE STRATEGY & SIGNALS</div>
           
           <div className="grid grid-cols-2 gap-4">
              <div>
-                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Target Tanggal Rilis</label>
+                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Target Release Date</label>
                 <input type="date" {...register('releaseDate')} className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
              </div>
              <div>
@@ -115,7 +121,7 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
 
           <div className="grid grid-cols-2 gap-4">
              <div>
-                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Estimasi Layanan (Screens)</label>
+                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Estimated Screens</label>
                 <input type="number" {...register('screenCount')} className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
              </div>
              <div>
@@ -129,24 +135,24 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
           <div className="grid grid-cols-2 gap-4">
              <div>
                 <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Trailer Views</label>
-                <input type="number" {...register('trailerViews')} placeholder="Opsional" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
+                <input type="number" {...register('trailerViews')} placeholder="Optional" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
              </div>
              <div>
                 <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Trailer Velocity (D+7/D+1)</label>
-                <input type="number" step="0.1" {...register('trailerVelocity')} placeholder="Opsional" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
+                <input type="number" step="0.1" {...register('trailerVelocity')} placeholder="Optional" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
              </div>
           </div>
 
           <div>
-             <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Kompetitor Utama</label>
-             <input {...register('competitors')} placeholder="Pisahkan dengan koma" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
+             <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Main Competitors</label>
+             <input {...register('competitors')} placeholder="Separate with commas" className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
           </div>
         </div>
       </div>
 
       <div className="flex justify-center flex-col items-center gap-4 border-t border-border-subtle pt-8">
         <p className="text-[12px] text-ink-tertiary text-center max-w-lg">
-           AI akan memproses profil film, sinyal marketing, dan konteks audiens dari AudienceDNA™ untuk memprediksi performa box office.
+           AI will process the film profile, marketing signals, and audience context from AudienceDNA™ to predict box office performance.
         </p>
         <button
           type="submit"
@@ -161,9 +167,9 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
           {isLoading ? (
             <>
               <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              Menjalankan Simulasi...
+              Running Simulation...
             </>
-          ) : "Jalankan Simulasi →"}
+          ) : "Run Simulation →"}
         </button>
       </div>
     </form>
