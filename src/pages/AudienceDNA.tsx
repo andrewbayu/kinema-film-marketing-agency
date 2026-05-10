@@ -4,12 +4,11 @@ import SegmentCard from '../components/ui/SegmentCard';
 import { runAudienceDNA } from '../lib/gemini';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { FilmProfileInput, AudienceDNAResult } from '../lib/types';
-import { Users, Info, ChevronRight, FileDown, BrainCircuit, History, AlertTriangle, Loader2 } from 'lucide-react';
+import { Users, Info, ChevronRight, FileDown, BrainCircuit, History, AlertTriangle, Loader2, Printer, ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { dbService } from '../services/dbService';
 import domtoimage from 'dom-to-image-more';
-import { jsPDF } from 'jspdf';
 
 export default function AudienceDNA() {
   const navigate = useNavigate();
@@ -36,13 +35,16 @@ export default function AudienceDNA() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportImage = async () => {
     if (!reportRef.current || !audienceDNAOutput) return;
     
     setExporting(true);
     try {
       const element = reportRef.current;
-      
       const dataUrl = await domtoimage.toPng(element, {
         quality: 1.0,
         bgcolor: '#0a0a0a',
@@ -50,21 +52,12 @@ export default function AudienceDNA() {
         height: element.offsetHeight
       });
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-      
-      pdf.setProperties({ title: `AudienceDNA - ${activeFilm?.title}` });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`KALA-AudienceDNA-${activeFilm?.title.replace(/\s+/g, '-')}.pdf`);
+      const link = document.createElement('a');
+      link.download = `KALA-AudienceDNA-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
+      link.href = dataUrl;
+      link.click();
     } catch (err) {
-      console.error("PDF Export failed", err);
-      window.print();
+      console.error("Image Export failed", err);
     } finally {
       setExporting(false);
     }
@@ -220,26 +213,32 @@ export default function AudienceDNA() {
                 </p>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col md:flex-row gap-4 pt-4 print:hidden">
                  <button 
                   onClick={() => navigate('/box-predict')}
-                  className="flex-1 py-4 bg-crimson text-white rounded-button font-bold flex items-center justify-center gap-2 hover:bg-crimson-rich transition-colors"
+                  className="flex-1 py-4 bg-crimson text-white rounded-button font-bold flex items-center justify-center gap-2 hover:bg-crimson-rich transition-colors uppercase tracking-wide shadow-lg shadow-crimson/20"
                  >
                    Continue to BoxPredict™
                    <ChevronRight className="w-5 h-5" />
                  </button>
-                 <button 
-                   onClick={handleExportPDF}
-                   disabled={exporting}
-                   className="flex-1 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors disabled:opacity-50"
-                 >
-                    {exporting ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <FileDown className="w-5 h-5" />
-                    )}
-                    {exporting ? 'Exporting...' : 'Export Audience Report'}
-                 </button>
+                 
+                 <div className="flex gap-2 shrink-0">
+                    <button 
+                      onClick={handlePrint}
+                      className="px-6 py-4 bg-white/5 border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors uppercase tracking-wide text-[12px]"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Print PDF
+                    </button>
+                    <button 
+                      onClick={handleExportImage}
+                      disabled={exporting}
+                      className="px-6 py-4 bg-white/5 border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors uppercase tracking-wide text-[12px] disabled:opacity-50"
+                    >
+                      {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                      {exporting ? '...' : 'PNG'}
+                    </button>
+                 </div>
               </div>
             </motion.div>
           )}

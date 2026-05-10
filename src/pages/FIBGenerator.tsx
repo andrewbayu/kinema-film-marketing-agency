@@ -2,13 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { generateFIB } from '../lib/gemini';
 import { FIBContent } from '../lib/types';
-import { FileText, Download, Edit3, ChevronLeft, AlertCircle, FileType, BrainCircuit, RefreshCw, History, Loader2 } from 'lucide-react';
+import { 
+  FileText, 
+  Download, 
+  Edit3, 
+  ChevronLeft, 
+  AlertCircle, 
+  FileType, 
+  BrainCircuit, 
+  RefreshCw, 
+  History, 
+  Loader2,
+  FileDown,
+  ExternalLink,
+  Printer
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
-import domtoimage from 'dom-to-image-more';
-import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 
 export default function FIBGenerator() {
   const navigate = useNavigate();
@@ -74,39 +88,55 @@ export default function FIBGenerator() {
     }
   };
 
-  const handleExportPDF = async () => {
-    if (!reportRef.current || !fibContent) return;
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  const handleExportWord = async () => {
+    if (!fibContent || !activeFilm) return;
     
     setExporting(true);
     try {
-      const element = reportRef.current;
-      
-      // Use dom-to-image-more for better compatibility with modern CSS colors
-      const dataUrl = await domtoimage.toPng(element, {
-        quality: 1.0,
-        bgcolor: '#ffffff',
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        style: {
-          // Force standard color space if needed (though domtoimage usually handles modern CSS better)
-        }
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: "FILM INTELLIGENCE BRIEF",
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+            }),
+            new Paragraph({ text: "" }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `FILM: ${activeFilm.title}`, bold: true }),
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `GENRE: ${activeFilm.genre}`, bold: true }),
+              ],
+            }),
+            new Paragraph({ text: "" }),
+            new Paragraph({ text: "01 — EXECUTIVE SUMMARY", heading: HeadingLevel.HEADING_2 }),
+            new Paragraph({ text: fibContent.executiveSummary }),
+            new Paragraph({ text: "" }),
+            new Paragraph({ text: "02 — AUDIENCE PROFILE", heading: HeadingLevel.HEADING_2 }),
+            new Paragraph({ text: fibContent.audienceAnalysis }),
+            new Paragraph({ text: "" }),
+            new Paragraph({ text: "03 — BOX OFFICE PROJECTION", heading: HeadingLevel.HEADING_2 }),
+            new Paragraph({ text: fibContent.boxOfficeAnalysis }),
+            new Paragraph({ text: "" }),
+            new Paragraph({ text: "04 — NEXT STEPS", heading: HeadingLevel.HEADING_2 }),
+            ...fibContent.nextSteps.map(step => new Paragraph({ text: `• ${step}`, bullet: { level: 0 } })),
+          ],
+        }],
       });
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-      
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`KALA-FIB-${activeFilm?.title.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`);
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `KALA-FIB-${activeFilm.title.replace(/\s+/g, '-')}.docx`);
     } catch (err) {
-      console.error("PDF Export failed", err);
-      // Fallback to print
-      window.print();
+      console.error("Word Export failed", err);
     } finally {
       setExporting(false);
     }
@@ -343,27 +373,39 @@ export default function FIBGenerator() {
            </div>
 
            <div className="space-y-3 pt-6 border-t border-border-subtle">
+              <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-2">EXPORT OPTIONS</div>
+              
               <button 
                 onClick={handleExportPDF}
-                disabled={!fibContent || exporting}
-                className="w-full py-4 bg-transparent border-2 border-crimson text-crimson rounded-button font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-crimson hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wide"
+                disabled={!fibContent}
+                className="w-full py-3.5 bg-crimson text-white rounded-button font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-crimson-rich transition-all disabled:opacity-30 uppercase tracking-wide shadow-lg shadow-crimson/20"
               >
-                {exporting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    Export as PDF
-                  </>
-                )}
+                <Printer className="w-4 h-4" />
+                Print / Save as PDF
               </button>
 
-              <div className="flex items-center gap-2 px-3 py-2 bg-orange-glow/10 border border-orange-kala/20 rounded text-orange-kala text-[11px] font-medium italic">
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={handleExportWord}
+                  disabled={!fibContent || exporting}
+                  className="py-3 bg-black-6 border border-border-strong text-ink-primary rounded-button font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-white/5 transition-all disabled:opacity-30 uppercase"
+                >
+                  {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                  Word
+                </button>
+                <button 
+                  onClick={() => window.open('https://docs.google.com/document/u/0/?show_intro=1', '_blank')}
+                  disabled={!fibContent}
+                  className="py-3 bg-black-6 border border-border-strong text-ink-primary rounded-button font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-white/5 transition-all disabled:opacity-30 uppercase"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  GDocs
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/5 border border-blue-500/10 rounded text-blue-400 text-[10px] font-medium italic">
                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                 PDF format uses a special stylesheet (print-only)
+                 <span>PDF uses browser print. Tip: Upload Word to Google Docs for editing.</span>
               </div>
            </div>
         </div>

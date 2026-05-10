@@ -5,13 +5,12 @@ import SensitivityBar from '../components/ui/SensitivityBar';
 import { runBoxPredict } from '../lib/gemini';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { BoxPredictInput, BoxPredictResult } from '../lib/types';
-import { TrendingUp, AlertTriangle, ChevronRight, FileDown, Info, BrainCircuit, Users, History, Loader2 } from 'lucide-react';
+import { TrendingUp, AlertTriangle, ChevronRight, FileDown, Info, BrainCircuit, Users, History, Loader2, Printer, ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
 import domtoimage from 'dom-to-image-more';
-import { jsPDF } from 'jspdf';
 
 export default function BoxPredict() {
   const navigate = useNavigate();
@@ -38,13 +37,16 @@ export default function BoxPredict() {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportImage = async () => {
     if (!reportRef.current || !boxPredictOutput) return;
     
     setExporting(true);
     try {
       const element = reportRef.current;
-      
       const dataUrl = await domtoimage.toPng(element, {
         quality: 1.0,
         bgcolor: '#0a0a0a',
@@ -52,21 +54,12 @@ export default function BoxPredict() {
         height: element.offsetHeight
       });
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-      
-      pdf.setProperties({ title: `BoxPredict - ${activeFilm?.title}` });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`KALA-BoxPredict-${activeFilm?.title.replace(/\s+/g, '-')}.pdf`);
+      const link = document.createElement('a');
+      link.download = `KALA-BoxPredict-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
+      link.href = dataUrl;
+      link.click();
     } catch (err) {
-      console.error("PDF Export failed", err);
-      window.print();
+      console.error("Image Export failed", err);
     } finally {
       setExporting(false);
     }
@@ -265,25 +258,37 @@ export default function BoxPredict() {
               </div>
 
               {/* Bottom Actions */}
-              <div className="flex gap-4">
-                 <button 
-                  onClick={() => navigate(`/fib/${activeFilm?.id || 'new'}`)}
-                  className="px-12 py-4 bg-crimson text-white rounded-button font-bold flex items-center justify-center gap-2 hover:bg-crimson-rich transition-colors uppercase tracking-wide"
-                 >
-                   Generate FIB Generator →
-                 </button>
-                 <button 
-                  onClick={handleExportPDF}
-                  disabled={exporting}
-                  className="px-8 py-4 bg-transparent border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors uppercase tracking-wide disabled:opacity-50"
-                 >
-                    {exporting ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <FileDown className="w-5 h-5" />
-                    )}
-                    {exporting ? 'Exporting...' : 'Export BoxPredict Report'}
-                 </button>
+              <div className="flex flex-col md:flex-row gap-6 pt-8 border-t border-border-subtle print:hidden">
+                 <div className="flex-1 space-y-4">
+                    <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest px-1">NEXT PHASE</div>
+                    <button 
+                      onClick={() => navigate(`/fib/${activeFilm?.id || 'new'}`)}
+                      className="w-full md:w-auto px-12 py-5 bg-crimson text-white rounded-button font-bold flex items-center justify-center gap-2 hover:bg-crimson-rich transition-all uppercase tracking-wide shadow-lg shadow-crimson/20"
+                    >
+                      Generate FIB Generator →
+                    </button>
+                 </div>
+
+                 <div className="space-y-4">
+                    <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest px-1">EXPORT REPORT</div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={handlePrint}
+                        className="px-6 py-4 bg-white/5 border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors uppercase tracking-wide text-[12px]"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print PDF
+                      </button>
+                      <button 
+                        onClick={handleExportImage}
+                        disabled={exporting}
+                        className="px-6 py-4 bg-white/5 border border-border-strong text-ink-primary rounded-button font-bold flex items-center justify-center gap-2 hover:bg-white/10 transition-colors uppercase tracking-wide text-[12px] disabled:opacity-50"
+                      >
+                        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                        {exporting ? 'Exporting...' : 'PNG'}
+                      </button>
+                    </div>
+                 </div>
               </div>
             </motion.div>
           ) : (
