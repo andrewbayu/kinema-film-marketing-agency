@@ -33,9 +33,21 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'andrew.bayu23@gmail.com' || 
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        exists(/databases/$(database)/documents/team/$(request.auth.token.email))
+        request.auth.token.email_verified == true && (
+          request.auth.token.email == 'andrew.bayu23@gmail.com' || 
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          exists(/databases/$(database)/documents/team/$(request.auth.token.email))
+        )
+      );
+    }
+
+    function belongsToOwnCampaign(campaignId) {
+      return isAdmin() || (
+        isSignedIn() && (
+          campaignId == null || campaignId == "" || campaignId == "new" ||
+          !exists(/databases/$(database)/documents/campaigns/$(campaignId)) || 
+          get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid
+        )
       );
     }
 
@@ -94,64 +106,49 @@ service cloud.firestore {
     // Audience DNA
     match /audience_dna/{dnaId} {
       function isValidDNA(data) {
-        return data.userId == request.auth.uid
-            && data.campaignId is string
-            && data.results is map
+        return (data.userId == request.auth.uid || isAdmin())
+            && (data.campaignId is string || data.campaignId == null)
+            && (data.results is map || data.results is string)
             && data.createdAt is timestamp;
       }
 
-      function belongsToOwnCampaign(campaignId) {
-        return get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid;
-      }
-
-      allow read: if isOwner(existing().userId);
-      allow create: if isSignedIn() && isValidId(dnaId) && isValidDNA(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId)
-                     && incoming().createdAt == request.time;
-      allow update: if false; // DNA results should be immutable snapshots
-      allow delete: if isOwner(existing().userId);
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isSignedIn() && isValidDNA(incoming())
+                     && belongsToOwnCampaign(incoming().campaignId);
+      allow update: if false; 
+      allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
     // Box Predict
     match /box_predict/{predictId} {
       function isValidPredict(data) {
-        return data.userId == request.auth.uid
-            && data.campaignId is string
-            && data.results is map
+        return (data.userId == request.auth.uid || isAdmin())
+            && (data.campaignId is string || data.campaignId == null)
+            && (data.results is map || data.results is string)
             && data.createdAt is timestamp;
       }
 
-      function belongsToOwnCampaign(campaignId) {
-        return get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid;
-      }
-
-      allow read: if isOwner(existing().userId);
-      allow create: if isSignedIn() && isValidId(predictId) && isValidPredict(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId)
-                     && incoming().createdAt == request.time;
-      allow update: if false; // Immutable snapshots
-      allow delete: if isOwner(existing().userId);
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isSignedIn() && isValidPredict(incoming())
+                     && belongsToOwnCampaign(incoming().campaignId);
+      allow update: if false; 
+      allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
     // FIB
     match /fib/{fibId} {
       function isValidFIB(data) {
-        return data.userId == request.auth.uid
-            && data.campaignId is string
-            && data.results is map
+        return (data.userId == request.auth.uid || isAdmin())
+            && (data.campaignId is string || data.campaignId == null)
+            && (data.results is map || data.results is string)
             && data.createdAt is timestamp;
       }
 
-      function belongsToOwnCampaign(campaignId) {
-        return get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid;
-      }
-
-      allow read: if isOwner(existing().userId);
-      allow create: if isSignedIn() && isValidId(fibId) && isValidFIB(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId)
-                     && incoming().createdAt == request.time;
-      allow update: if false; // Immutable snapshots
-      allow delete: if isOwner(existing().userId);
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isSignedIn() && isValidFIB(incoming())
+                     && belongsToOwnCampaign(incoming().campaignId);
+      allow update: if false; 
+      allow delete: if isOwner(existing().userId) || isAdmin();
     }
   }
 }

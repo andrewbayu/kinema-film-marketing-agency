@@ -46,11 +46,12 @@ export default function FIBGenerator() {
         {
           title: activeFilm.title,
           genre: activeFilm.genre as any,
-          budgetTier: 'mid', // fallback
-          releaseWindow: 'regular',
-          logline: 'Film profile from session',
-          leadCast: 'Cast from session',
-          ipType: 'original'
+          budgetTier: activeFilm.budgetTier || 'mid',
+          releaseWindow: activeFilm.releaseWindow || '',
+          logline: activeFilm.logline || '',
+          leadCast: activeFilm.leadCast || '',
+          ipType: activeFilm.ipType || 'original',
+          director: activeFilm.director
         },
         audienceDNAOutput,
         boxPredictOutput

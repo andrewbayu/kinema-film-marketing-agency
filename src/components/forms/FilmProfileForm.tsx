@@ -1,36 +1,37 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { FilmProfileInput, GenreOption, BudgetTier, ReleaseWindow, IPType } from '../../lib/types';
+import { FilmProfileInput, GenreOption, BudgetTier, IPType } from '../../lib/types';
 import { cn } from '../../lib/utils';
 
 interface FilmProfileFormProps {
   onSubmit: (data: FilmProfileInput) => void;
   isLoading?: boolean;
   submitLabel?: string;
+  initialData?: Partial<FilmProfileInput> | null;
 }
 
 const GENRES: GenreOption[] = [
   'Supernatural Horror',
+  'Horror',
   'Romantic Drama',
   'Comedy',
+  'Horror Comedy',
+  'Adventure / Horror Comedy',
   'Family / Animation',
   'Thriller / Crime',
+  'Action',
+  'Drama',
   'Biopic',
-  'Action'
+  'Religious Drama',
+  'History',
+  'Musical',
+  'Documentary'
 ];
 
 const BUDGET_TIERS: { value: BudgetTier; label: string }[] = [
   { value: 'indie', label: 'Indie (< IDR 5B)' },
   { value: 'mid', label: 'Mid (IDR 5–30B)' },
   { value: 'major', label: 'Major (IDR 30B+)' }
-];
-
-const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
-  { value: 'lebaran', label: 'Eid al-Fitr (2.2x)' },
-  { value: 'nataru', label: 'Christmas & New Year (1.6x)' },
-  { value: 'long-weekend', label: 'Long Weekend (1.3x)' },
-  { value: 'regular', label: 'Regular (1.0x)' },
-  { value: 'ramadan', label: 'Ramadan (0.5x)' }
 ];
 
 const IP_TYPES: { value: IPType; label: string }[] = [
@@ -41,14 +42,29 @@ const IP_TYPES: { value: IPType; label: string }[] = [
   { value: 'sequel', label: 'Sequel' }
 ];
 
-export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Submit" }: FilmProfileFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FilmProfileInput>({
+export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Submit", initialData }: FilmProfileFormProps) {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FilmProfileInput>({
     defaultValues: {
       budgetTier: 'mid',
-      releaseWindow: 'regular',
-      ipType: 'original'
+      ipType: 'original',
+      ...initialData
     }
   });
+
+  // Reset form when initialData changes
+  React.useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title || '',
+        genre: initialData.genre || 'Supernatural Horror',
+        budgetTier: initialData.budgetTier || 'mid',
+        logline: initialData.logline || '',
+        leadCast: initialData.leadCast || '',
+        ipType: initialData.ipType || 'original',
+        director: initialData.director || ''
+      });
+    }
+  }, [initialData, reset]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -84,7 +100,7 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
            <div>
             <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Budget Tier</label>
             <select 
@@ -92,15 +108,6 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
               className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors"
             >
               {BUDGET_TIERS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Release Window</label>
-            <select 
-              {...register('releaseWindow', { required: true })}
-              className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors"
-            >
-              {RELEASE_WINDOWS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
         </div>

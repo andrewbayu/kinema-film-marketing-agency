@@ -4,7 +4,7 @@ export const mockFilms: Film[] = [
   {
     id: 'garuda',
     title: 'Project Garuda',
-    genre: 'Horror Supernatural',
+    genre: 'Supernatural Horror',
     client: 'MD Pictures',
     phase: 'Week 4',
     daysToRelease: -28,
@@ -12,11 +12,16 @@ export const mockFilms: Film[] = [
     occupancy: 72,
     status: 'active',
     progress: 72,
+    logline: 'A research team discovers an ancient deity in a remote mountain range.',
+    leadCast: 'Ario Bayu, Tara Basro',
+    budgetTier: 'major',
+    releaseWindow: 'nataru',
+    ipType: 'original'
   },
   {
     id: 'sayap',
     title: 'Sayap Patah',
-    genre: 'Drama Romantis',
+    genre: 'Romantic Drama',
     client: 'Visinema',
     phase: 'Pre-release',
     daysToRelease: 14,
@@ -25,11 +30,16 @@ export const mockFilms: Film[] = [
     status: 'pre-release',
     progress: 31,
     alert: 'Awareness gap — segmen Penonton Romance belum terjangkau',
+    logline: 'A dramatic love story set against the backdrop of a security crisis.',
+    leadCast: 'Nicholas Saputra, Ariel Tatum',
+    budgetTier: 'mid',
+    releaseWindow: 'regular',
+    ipType: 'popular-adaptation'
   },
   {
     id: 'langit',
     title: 'Langit Ketujuh',
-    genre: 'Keluarga / Animasi',
+    genre: 'Family / Animation',
     client: 'Falcon Pictures',
     phase: 'Post W2',
     daysToRelease: -14,
@@ -37,6 +47,10 @@ export const mockFilms: Film[] = [
     occupancy: 45,
     status: 'post',
     progress: 100,
+    logline: 'An animated adventure of five friends searching for a mythical city.',
+    budgetTier: 'mid',
+    releaseWindow: 'lebaran',
+    ipType: 'original'
   },
 ];
 

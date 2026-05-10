@@ -51,7 +51,6 @@ export default function BoxPredict() {
           title: data.title,
           genre: data.genre,
           budgetTier: data.budgetTier,
-          releaseWindow: data.releaseWindow,
           logline: data.logline,
           leadCast: data.leadCast,
           ipType: data.ipType,
@@ -114,11 +113,25 @@ export default function BoxPredict() {
 
       {/* Form Section */}
       <section className="bg-black-4 border border-border-subtle p-8 rounded-card-lg relative">
-        <BoxPredictForm onSubmit={handlePredict} isLoading={loading} />
+        <BoxPredictForm onSubmit={handlePredict} isLoading={loading} initialData={activeFilm} />
         {error && (
-          <div className="mt-6 p-4 bg-crimson-surface border border-crimson/20 rounded-card-sm text-crimson text-[13px] font-medium flex gap-2">
-            <Info className="w-4 h-4 shrink-0" />
-            {error}
+          <div className="mt-8 p-6 bg-crimson-surface/40 border border-crimson/20 rounded-card-lg text-crimson flex flex-col items-center text-center gap-4">
+            <AlertTriangle className="w-8 h-8 opacity-50" />
+            <div className="space-y-1">
+              <h4 className="text-[15px] font-bold uppercase tracking-tight">Simulation Failed</h4>
+              <p className="text-[13px] text-ink-secondary max-w-sm">
+                BoxPredict™ failed to complete the analysis. This is often due to high demand or complex market data retrieval.
+              </p>
+            </div>
+            <button 
+              onClick={() => {
+                const form = document.querySelector('form');
+                if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+              }}
+              className="px-6 py-2 bg-crimson text-white rounded-button text-[12px] font-bold hover:bg-crimson-rich transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         )}
       </section>
@@ -141,7 +154,24 @@ export default function BoxPredict() {
                </div>
                <div className="text-center space-y-2">
                  <h3 className="text-[18px] font-bold text-ink-primary">AI Analyzing Scenario</h3>
-                 <p className="text-[14px] text-ink-tertiary max-w-sm">Calculating multipliers, competition, and audience resonance... (est. 8 seconds)</p>
+                 <p className="text-[14px] text-ink-tertiary max-w-sm">Calculating multipliers, competition, and audience resonance... (est. 15–25 seconds)</p>
+                 <div className="flex justify-center gap-1 mt-2">
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                 </div>
                </div>
              </motion.div>
           ) : boxPredictOutput ? (

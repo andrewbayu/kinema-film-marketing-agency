@@ -1,35 +1,36 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { BoxPredictInput, GenreOption, BudgetTier, ReleaseWindow, IPType } from '../../lib/types';
+import { BoxPredictInput, GenreOption, BudgetTier, IPType } from '../../lib/types';
 import { cn } from '../../lib/utils';
 
 interface BoxPredictFormProps {
   onSubmit: (data: BoxPredictInput) => void;
   isLoading?: boolean;
+  initialData?: Partial<BoxPredictInput> | null;
 }
 
 const GENRES: GenreOption[] = [
   'Supernatural Horror',
+  'Horror',
   'Romantic Drama',
   'Comedy',
+  'Horror Comedy',
+  'Adventure / Horror Comedy',
   'Family / Animation',
   'Thriller / Crime',
+  'Action',
+  'Drama',
   'Biopic',
-  'Action'
+  'Religious Drama',
+  'History',
+  'Musical',
+  'Documentary'
 ];
 
 const BUDGET_TIERS: { value: BudgetTier; label: string }[] = [
   { value: 'indie', label: 'Indie (< IDR 5B)' },
   { value: 'mid', label: 'Mid (IDR 5–30B)' },
   { value: 'major', label: 'Major (IDR 30B+)' }
-];
-
-const RELEASE_WINDOWS: { value: ReleaseWindow; label: string }[] = [
-  { value: 'lebaran', label: 'Eid al-Fitr (2.2x)' },
-  { value: 'nataru', label: 'Christmas & New Year (1.6x)' },
-  { value: 'long-weekend', label: 'Long Weekend (1.3x)' },
-  { value: 'regular', label: 'Regular (1.0x)' },
-  { value: 'ramadan', label: 'Ramadan (0.5x)' }
 ];
 
 const IP_TYPES: { value: IPType; label: string }[] = [
@@ -40,17 +41,36 @@ const IP_TYPES: { value: IPType; label: string }[] = [
   { value: 'sequel', label: 'Sequel' }
 ];
 
-export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<BoxPredictInput>({
+export default function BoxPredictForm({ onSubmit, isLoading, initialData }: BoxPredictFormProps) {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<BoxPredictInput>({
     defaultValues: {
       budgetTier: 'mid',
-      releaseWindow: 'regular',
       ipType: 'original',
       screenCount: 1200,
       castScore: 7,
-      directorScore: 7
+      directorScore: 7,
+      ...initialData
     }
   });
+
+  // Reset form when initialData changes
+  React.useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title || '',
+        genre: initialData.genre || 'Supernatural Horror',
+        budgetTier: initialData.budgetTier || 'mid',
+        ipType: initialData.ipType || 'original',
+        logline: initialData.logline || '',
+        leadCast: initialData.leadCast || '',
+        screenCount: initialData.screenCount || 1200,
+        castScore: initialData.castScore || 7,
+        directorScore: initialData.directorScore || 7,
+        releaseDate: initialData.releaseDate || '',
+        competitors: initialData.competitors || []
+      });
+    }
+  }, [initialData, reset]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -106,16 +126,11 @@ export default function BoxPredictForm({ onSubmit, isLoading }: BoxPredictFormPr
         <div className="space-y-6">
           <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest border-b border-border-subtle pb-2">RELEASE STRATEGY & SIGNALS</div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
              <div>
                 <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Target Release Date</label>
-                <input type="date" {...register('releaseDate')} className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]" />
-             </div>
-             <div>
-                <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Release Window</label>
-                <select {...register('releaseWindow')} className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2 text-[14px]">
-                    {RELEASE_WINDOWS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                </select>
+                <input type="date" {...register('releaseDate', { required: true })} className="w-full bg-black-3 border border-crimson/30 rounded-card-sm px-4 py-3 text-[15px] font-bold text-white focus:border-crimson transition-all" />
+                <p className="text-[10px] text-ink-tertiary mt-2 italic">AI will analyze this date for Indonesian holidays, school breaks, and seasonal factors.</p>
              </div>
           </div>
 

@@ -1,7 +1,7 @@
 export interface Film {
   id: string;
   title: string;
-  genre: string;
+  genre: GenreOption;
   client: string;
   phase: string;
   daysToRelease: number;
@@ -10,22 +10,43 @@ export interface Film {
   status: 'active' | 'pre-release' | 'post';
   progress: number;
   alert?: string;
+  // Extended fields from Campaign profile
+  logline?: string;
+  leadCast?: string;
+  director?: string;
+  budgetTier?: BudgetTier;
+  releaseWindow?: ReleaseWindow;
+  ipType?: IPType;
 }
 
 export type BudgetTier = 'indie' | 'mid' | 'major';
-export type ReleaseWindow = 'lebaran' | 'nataru' | 'long-weekend' | 'regular' | 'ramadan';
 export type IPType = 'original' | 'minor-adaptation' | 'popular-adaptation' | 'major-ip' | 'sequel';
-export type GenreOption = 'Supernatural Horror' | 'Romantic Drama' | 'Comedy' | 'Family / Animation' | 'Thriller / Crime' | 'Biopic' | 'Action';
+export type GenreOption = 
+  | 'Supernatural Horror' 
+  | 'Horror'
+  | 'Romantic Drama' 
+  | 'Comedy' 
+  | 'Horror Comedy'
+  | 'Adventure / Horror Comedy'
+  | 'Family / Animation' 
+  | 'Thriller / Crime' 
+  | 'Action'
+  | 'Drama'
+  | 'Biopic'
+  | 'Religious Drama'
+  | 'History'
+  | 'Musical'
+  | 'Documentary';
 
 export interface FilmProfileInput {
   title: string;
   genre: GenreOption;
   budgetTier: BudgetTier;
-  releaseWindow: ReleaseWindow;
   logline: string;
   leadCast: string;
   ipType: IPType;
   director?: string;
+  releaseWindow?: string; // Optional for legacy or AI to fill
 }
 
 export interface BoxPredictInput extends FilmProfileInput {

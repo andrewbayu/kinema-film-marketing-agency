@@ -17,6 +17,36 @@ if (!process.env.GEMINI_API_KEY) {
   console.warn("WARNING: GEMINI_API_KEY is not defined. Please add it to Secrets in AI Studio.");
 }
 
+async function generateWithRetry(prompt: string, config: any, retries = 3): Promise<any> {
+  let lastError: any;
+  for (let i = 0; i < retries; i++) {
+    try {
+      // @ts-ignore
+      return await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+          ...config,
+          // Increase timeout budget slightly for tool calls if the environment allows or model respects it
+        }
+      });
+    } catch (err: any) {
+      lastError = err;
+      const errorMsg = err.message || '';
+      const isTransient = errorMsg.includes('500') || errorMsg.includes('503') || errorMsg.includes('Deadline') || errorMsg.includes('UNAVAILABLE');
+      
+      if (!isTransient) throw err;
+      
+      console.warn(`Gemini API transient error (attempt ${i + 1}/${retries}). Retrying...`, err);
+      if (i < retries - 1) {
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 2000));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceDNAResult> {
   const prompt = `
     ${KALA_SYSTEM_PROMPT}
@@ -28,14 +58,13 @@ export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceD
     LOGLINE: ${input.logline}
     LEAD CAST: ${input.leadCast}
     BUDGET TIER: ${input.budgetTier}
-    RELEASE WINDOW: ${input.releaseWindow}
     IP TYPE: ${input.ipType}
     ${input.director ? `SUTRADARA: ${input.director}` : ''}
 
     Tugasmu:
     1. Identifikasi 3-4 segmen penonton Indonesia yang paling relevan.
-    2. CARI TAHU tren terbaru di Indonesia (TikTok/IG) yang berkaitan dengan genre atau cast ini menggunakan tool search.
-    3. Analisis bagaimana tren tersebut mempengaruhi minat penonton.
+    2. CARI TAHU tren terbaru di Indonesia (TikTok/IG/News) yang berkaitan dengan genre atau subjek film ini. Fokus pada kata kunci spesifik untuk efisiensi.
+    3. Analisis landscape penonton dan prediksi resonance score.
 
     Output harus dalam format JSON murni:
     {
@@ -66,14 +95,14 @@ export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceD
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
+    const response = await generateWithRetry(
+      prompt,
+      {
         tools: [{ googleSearch: {} }],
-        responseMimeType: 'application/json'
+        responseMimeType: 'application/json',
+        thinkingConfig: { thinkingLevel: 'LOW' }
       }
-    });
+    );
     
     const text = response.text || '';
     return JSON.parse(text) as AudienceDNAResult;
@@ -95,15 +124,14 @@ export async function runBoxPredict(
     
     FILM: ${boxInput.title}
     GENRE: ${boxInput.genre}
-    RELEASE: ${boxInput.releaseDate} (${boxInput.releaseWindow})
+    RELEASE DATE: ${boxInput.releaseDate}
     AUDIENCE: ${audienceResult.primarySegment}
 
-    INSTRUKSI KHUSUS (MANDATORY):
-    1. Gunakan tool SEARCH untuk mencari DATA HISTORIS BOX OFFICE Indonesia untuk film dengan GENRE serupa (${boxInput.genre}) atau TEMA serupa dalam 3-5 tahun terakhir.
-    2. Identifikasi tren performa (admissions) dari film-film referensi tersebut untuk menjustifikasi angka P25 (Bear) dan P50 (Base).
-    3. Gunakan tool SEARCH untuk mengecek apakah ada EVENT BESAR (Piala Dunia, Konser, Event Politik, Libur Nasional Baru) di sekitar tanggal ${boxInput.releaseDate}.
-    4. Cek apakah ada kompetitor besar (Hollywood atau Lokal) yang sudah lock tanggal serupa.
-    5. Hubungkan tema film (misal: Sepakbola) dengan event dunia/lokal yang relevan untuk mencari "Momentum Boost".
+    INSTRUKSI KHUSUS ANALISIS MARKET:
+    1. CARI TAHU konteks tanggal ${boxInput.releaseDate} di Indonesia. Apakah itu hari biasa? Lebaran? Libur sekolah? Long weekend?
+    2. CARI TAHU kompetisi film (Hollywood/Lokal) yang rilis dalam window 2 minggu di sekitar ${boxInput.releaseDate}.
+    3. CARI TAHU performa box office film Indonesia dengan genre/skala serupa dalam 2 tahun terakhir untuk benchmarking.
+    4. Justifikasi angka P25, P50, P75 berdasarkan temuan real-time dari pencarian tersebut.
     
     Hasilkan proyeksi box office 3 skenario (bear, base, bull) di pasar Indonesia dengan mempertimbangkan data historis dan faktor eksternal tersebut.
 
@@ -122,14 +150,14 @@ export async function runBoxPredict(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
+    const response = await generateWithRetry(
+      prompt,
+      {
         tools: [{ googleSearch: {} }],
-        responseMimeType: 'application/json'
+        responseMimeType: 'application/json',
+        thinkingConfig: { thinkingLevel: 'LOW' }
       }
-    });
+    );
     
     const text = response.text || '';
     return JSON.parse(text) as BoxPredictResult;
@@ -162,13 +190,12 @@ export async function generateFIB(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
+    const response = await generateWithRetry(
+      prompt,
+      {
         responseMimeType: 'application/json'
       }
-    });
+    );
     
     const text = response.text || '';
     return JSON.parse(text) as FIBContent;

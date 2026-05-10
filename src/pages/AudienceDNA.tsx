@@ -71,13 +71,25 @@ export default function AudienceDNA() {
             onSubmit={handleAnalyze} 
             isLoading={loading}
             submitLabel="Analyze Audience →"
+            initialData={activeFilm}
           />
         </div>
         
         {error && (
-          <div className="p-4 bg-crimson-surface border border-crimson/20 rounded-card-sm text-crimson text-[13px] font-medium flex gap-2">
-            <Info className="w-4 h-4 shrink-0" />
-            {error}
+          <div className="p-5 bg-crimson-surface/50 border border-crimson/20 rounded-card-md text-crimson space-y-3">
+            <div className="flex gap-2 text-[13px] font-bold items-center uppercase tracking-wide">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              Analysis Error
+            </div>
+            <p className="text-[13px] text-ink-secondary leading-relaxed opacity-90">
+              The AI simulation timed out or encountered an issue. This usually happens when the market data search takes too long.
+            </p>
+            <button 
+              onClick={() => handleAnalyze(activeFilm as FilmProfileInput)}
+              className="w-full py-2 bg-crimson text-white rounded-button text-[12px] font-bold hover:bg-crimson-rich transition-colors"
+            >
+              Retry Simulation
+            </button>
           </div>
         )}
       </aside>
@@ -117,7 +129,24 @@ export default function AudienceDNA() {
                </div>
                <div className="text-center space-y-2">
                  <h3 className="text-[18px] font-bold text-ink-primary">AI is Working</h3>
-                 <p className="text-[14px] text-ink-tertiary max-w-sm">Analyzing Indonesian audience profiles based on the KALA dataset... (est. 5 seconds)</p>
+                 <p className="text-[14px] text-ink-tertiary max-w-sm">Analyzing Indonesian audience profiles based on the KALA dataset... (est. 10–20 seconds)</p>
+                 <div className="flex justify-center gap-1 mt-2">
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                   <motion.div 
+                     animate={{ opacity: [0.3, 1, 0.3] }} 
+                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
+                     className="w-1.5 h-1.5 bg-crimson rounded-full" 
+                   />
+                 </div>
                </div>
              </motion.div>
           ) : (

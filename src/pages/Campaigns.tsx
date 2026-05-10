@@ -73,12 +73,18 @@ export default function Campaigns() {
   });
 
   const handleFilmClick = (film: any) => {
-    // Map Firestore data to the expected Film type if needed
+    // Map Firestore data to the expected Film type with all original profile fields
     const selectedFilm = {
       id: film.id,
       title: film.title,
       genre: film.genre,
-      client: 'Internal',
+      logline: film.logline,
+      leadCast: film.leadCast,
+      director: film.director,
+      budgetTier: film.budgetTier,
+      releaseWindow: film.releaseWindow,
+      ipType: film.ipType,
+      client: film.client || 'Internal',
       phase: film.phase || 'Development',
       daysToRelease: film.daysToRelease || 90,
       reach: film.reach || '0',

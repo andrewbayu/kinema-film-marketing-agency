@@ -226,7 +226,7 @@ export default function AdminDashboard() {
               <div className="p-4 bg-white/5 rounded-lg border border-white/5">
                 <p className="text-[12px] text-white-tertiary leading-relaxed">
                   <span className="text-white-secondary font-bold">Schema Note:</span><br />
-                  Each object should have: <code className="text-crimson">title</code> (required), <code className="text-crimson">genre</code>, <code className="text-crimson">budgetTier</code>, <code className="text-crimson">releaseWindow</code>, <code className="text-crimson">logline</code>.
+                  Each object should have: <code className="text-crimson">title</code> (required), <code className="text-crimson">genre</code>, <code className="text-crimson">budgetTier</code>, <code className="text-crimson">releaseWindow</code>, <code className="text-crimson">ipType</code>, <code className="text-crimson">logline</code>, <code className="text-crimson">leadCast</code>, <code className="text-crimson">director</code>.
                 </p>
               </div>
             </form>

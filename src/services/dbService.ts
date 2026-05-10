@@ -9,7 +9,8 @@ import {
   orderBy, 
   Timestamp,
   addDoc,
-  onSnapshot
+  onSnapshot,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { AudienceDNAResult, BoxPredictResult, FilmProfileInput, BoxPredictInput } from '../lib/types';
@@ -62,7 +63,7 @@ export const dbService = {
       const docRef = await addDoc(collection(db, path), {
         ...input,
         userId,
-        createdAt: Timestamp.now(),
+        createdAt: serverTimestamp(),
         status: 'active'
       });
       return docRef.id;
@@ -100,7 +101,7 @@ export const dbService = {
         campaignId,
         userId,
         results,
-        createdAt: Timestamp.now()
+        createdAt: serverTimestamp()
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -134,7 +135,7 @@ export const dbService = {
         campaignId,
         userId,
         results,
-        createdAt: Timestamp.now()
+        createdAt: serverTimestamp()
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -168,7 +169,7 @@ export const dbService = {
         campaignId,
         userId,
         results,
-        createdAt: Timestamp.now()
+        createdAt: serverTimestamp()
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);

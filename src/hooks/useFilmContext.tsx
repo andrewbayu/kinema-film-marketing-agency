@@ -14,15 +14,27 @@ interface FilmContextType {
 const FilmContext = createContext<FilmContextType | undefined>(undefined);
 
 export function FilmProvider({ children }: { children: ReactNode }) {
-  const [activeFilm, setActiveFilm] = useState<Film | null>(mockFilms[0]); // Default to first film
+  const [activeFilm, setActiveFilm] = useState<Film | null>(() => {
+    const saved = localStorage.getItem('activeFilm');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [audienceDNAOutput, setAudienceDNAOutput] = useState<AudienceDNAResult | null>(null);
   const [boxPredictOutput, setBoxPredictOutput] = useState<BoxPredictResult | null>(null);
+
+  const handleSetActiveFilm = (film: Film | null) => {
+    setActiveFilm(film);
+    if (film) {
+      localStorage.setItem('activeFilm', JSON.stringify(film));
+    } else {
+      localStorage.removeItem('activeFilm');
+    }
+  };
 
   return (
     <FilmContext.Provider
       value={{
         activeFilm,
-        setActiveFilm,
+        setActiveFilm: handleSetActiveFilm,
         audienceDNAOutput,
         setAudienceDNAOutput,
         boxPredictOutput,
