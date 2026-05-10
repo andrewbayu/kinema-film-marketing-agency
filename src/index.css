@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Colors - Brief Tokens */
+  --color-black-1: #050505;
+  --color-black-2: #0A0A0A; /* App Background */
+  --color-black-3: #111111; /* Sidebar / Stats Strip */
+  --color-black-4: #191919; /* Card Surface */
+  --color-black-5: #212121;
+  --color-black-6: #2A2A2A; /* Hover */
+
+  --color-crimson: #9B1C1C;
+  --color-crimson-rich: #B22222;
+  --color-crimson-dark: #6B1212;
+  --color-crimson-glow: rgba(155, 28, 28, 0.15);
+  --color-crimson-surface: rgba(155, 28, 28, 0.08);
+
+  --color-orange-kala: #E07B39;
+  --color-orange-dim: #A85A28;
+  --color-orange-glow: rgba(224, 123, 57, 0.12);
+
+  --color-green-kala: #4ADE80;
+
+  --color-white-primary: #F5F0EB;
+  --color-white-secondary: #A09896;
+  --color-white-tertiary: #5A5655;
+
+  /* Semantic Aliases */
+  --color-ink-primary: #F5F0EB;
+  --color-ink-secondary: #A09896;
+  --color-ink-tertiary: #5A5655;
+
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-default: rgba(255, 255, 255, 0.10);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Fonts */
+  --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Animation Easings */
+  --ease-out-kala: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-kala: cubic-bezier(0.4, 0, 1, 1);
+  --ease-smooth-kala: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Spacing & Utilities */
+  --radius-card-lg: 12px;
+  --radius-card-2xl: 16px;
+  --radius-card-sm: 8px;
+  --radius-badge: 4px;
+  --radius-button: 8px;
+}
+
+@layer base {
+  body {
+    @apply bg-black-2 text-white-primary font-body antialiased selection:bg-crimson selection:text-white;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black-2;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-black-5 rounded-full hover:bg-black-6 transition-colors;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s infinite ease-in-out;
+}

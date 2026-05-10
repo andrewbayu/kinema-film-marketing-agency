@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "Campaign": {
+      "title": "Campaign",
+      "description": "A film project campaign",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "genre": { "type": "string" },
+        "budgetTier": { "type": "string" },
+        "releaseWindow": { "type": "string" },
+        "logline": { "type": "string" },
+        "leadCast": { "type": "string" },
+        "ipType": { "type": "string" },
+        "director": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      },
+      "required": [
+        "title",
+        "userId",
+        "createdAt"
+      ]
+    },
+    "AudienceDNA": {
+      "title": "Audience DNA",
+      "description": "AI analysis of potential audience segments",
+      "type": "object",
+      "properties": {
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "results": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "campaignId",
+        "userId",
+        "results",
+        "createdAt"
+      ]
+    },
+    "BoxPredict": {
+      "title": "Box Predict",
+      "description": "AI box office predictions",
+      "type": "object",
+      "properties": {
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "results": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "campaignId",
+        "userId",
+        "results",
+        "createdAt"
+      ]
+    },
+    "FIB": {
+      "title": "Film Intelligence Brief",
+      "description": "Consolidated AI report",
+      "type": "object",
+      "properties": {
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "results": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "campaignId",
+        "userId",
+        "results",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "campaigns": {
+      "schema": "Campaign",
+      "description": "Collections of film projects"
+    },
+    "audience_dna": {
+      "schema": "AudienceDNA",
+      "description": "Stored Audience DNA results"
+    },
+    "box_predict": {
+      "schema": "BoxPredict",
+      "description": "Stored Box Office predictions"
+    },
+    "fib": {
+      "schema": "FIB",
+      "description": "Stored FIB results"
+    }
+  }
+}
