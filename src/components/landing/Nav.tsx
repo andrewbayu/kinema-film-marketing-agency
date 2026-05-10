@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNavScroll } from '../../hooks/useNavScroll';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Nav() {
   const scrolled = useNavScroll();
   const navigate = useNavigate();
+  const { user, login } = useAuth();
 
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -39,15 +41,24 @@ export default function Nav() {
           ))}
         </div>
 
-        <button 
-          onClick={() => navigate('/discussion')}
-          className="relative group bg-crimson hover:bg-crimson-rich text-white-primary px-6 py-2.5 rounded-full font-semibold text-[13px] transition-all active:scale-95 shadow-[0_4px_20px_rgba(155,28,28,0.2)]"
-        >
-          Talk with KALA →
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-black-4 border border-border-default px-3 py-1.5 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Free. No agenda. Let's explore.
-          </div>
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={user ? () => navigate('/') : login}
+            className="text-[13px] font-bold text-white-primary hover:text-crimson transition-colors px-4 py-2"
+          >
+            {user ? 'Go to Dashboard' : 'Sign In'}
+          </button>
+
+          <button 
+            onClick={() => navigate('/discussion')}
+            className="relative group bg-crimson hover:bg-crimson-rich text-white-primary px-6 py-2.5 rounded-full font-semibold text-[13px] transition-all active:scale-95 shadow-[0_4px_20px_rgba(155,28,28,0.2)]"
+          >
+            Talk with KALA →
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-black-4 border border-border-default px-3 py-1.5 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Free. No agenda. Let's explore.
+            </div>
+          </button>
+        </div>
       </div>
     </nav>
   );

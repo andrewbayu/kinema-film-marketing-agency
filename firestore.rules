@@ -31,9 +31,49 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'andrew.bayu23@gmail.com' || 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        exists(/databases/$(database)/documents/team/$(request.auth.token.email))
+      );
+    }
+
     // -------------------------------------------------------------
     // Entities
     // -------------------------------------------------------------
+    
+    // Team Management (Internal Admins)
+    match /team/{email} {
+      function isValidTeamMember(data) {
+        return data.email == email && data.email.size() <= 100
+            && data.role in ['admin', 'super_admin']
+            && data.addedBy == request.auth.uid
+            && data.createdAt is timestamp;
+      }
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() && isValidTeamMember(incoming()) && incoming().createdAt == request.time;
+      allow delete: if isAdmin();
+    }
+
+    // Clients Authorization
+    match /clients/{clientId} {
+      function isValidClient(data) {
+        return data.email is string && data.email.size() <= 100
+            && data.addedBy == request.auth.uid
+            && data.createdAt is timestamp;
+      }
+      allow read: if isSignedIn() && (resource.data.email == request.auth.token.email || isAdmin());
+      allow create: if isAdmin() && isValidId(clientId) && isValidClient(incoming())
+                     && incoming().createdAt == request.time;
+      allow delete: if isAdmin();
+    }
+
+    // Admins
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow write: if isAdmin();
+    }
 
     // Campaigns
     match /campaigns/{campaignId} {

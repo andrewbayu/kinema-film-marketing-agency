@@ -79,6 +79,7 @@ export default function HowItWorks() {
 interface StepCardProps {
   step: { num: string; title: string; body: string; label: string };
   index: number;
+  key?: string;
 }
 
 function StepCard({ step, index }: StepCardProps) {

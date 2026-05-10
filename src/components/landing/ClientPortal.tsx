@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function ClientPortal() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const [activeTab, setActiveTab] = useState<'overview' | 'ticker'>('overview');
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <section ref={ref as any} className="py-40 px-6 bg-black-1/30">
@@ -19,6 +23,14 @@ export default function ClientPortal() {
             Every KALA client has access to a dashboard displaying everything in progress — in real-time, whenever you want to open it.<br /><br />
             No need to wait for weekly reports. No need to ask "what's the update?" Everything is in one place.
           </p>
+
+          <button 
+            onClick={user ? () => navigate('/') : login}
+            className="bg-white/5 border border-white/10 hover:border-crimson/50 text-white-primary px-8 py-4 rounded-full font-bold text-[15px] transition-all flex items-center gap-3 group"
+          >
+            {user ? 'Go to Dashboard' : 'Sign In to Portal'}
+            <span className="text-crimson group-hover:translate-x-1 transition-transform">→</span>
+          </button>
         </div>
 
         <motion.div

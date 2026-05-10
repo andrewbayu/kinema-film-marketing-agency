@@ -9,10 +9,12 @@ import {
   Wand2, 
   Network, 
   MessageCircle,
-  Settings
+  Settings,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useFilmContext } from '../../hooks/useFilmContext';
+import { useAuth } from '../../hooks/useAuth';
 
 interface NavItemProps {
   to: string;
@@ -64,6 +66,7 @@ function NavItem({ to, icon: Icon, label, disabled, badge }: NavItemProps) {
 
 export default function Sidebar() {
   const { activeFilm } = useFilmContext();
+  const { isAdmin } = useAuth();
 
   return (
     <aside className="w-[220px] fixed inset-y-0 left-0 bg-black-3 border-r border-border-subtle flex flex-col z-40">
@@ -79,6 +82,15 @@ export default function Sidebar() {
 
       {/* Nav */}
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-6">
+        {isAdmin && (
+          <div>
+            <div className="px-3 mb-2 text-[10px] font-mono font-bold text-crimson uppercase tracking-widest">ADMIN</div>
+            <div className="space-y-1">
+              <NavItem to="/admin" icon={ShieldCheck} label="Access Portal" />
+            </div>
+          </div>
+        )}
+
         <div>
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">WORKSPACE</div>
           <div className="space-y-1">

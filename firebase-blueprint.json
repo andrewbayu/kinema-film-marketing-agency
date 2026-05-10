@@ -73,6 +73,29 @@
         "results",
         "createdAt"
       ]
+    },
+    "Client": {
+      "title": "Allowed Client",
+      "description": "An authorized client email for dashboard access",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "addedBy", "createdAt"]
+    },
+    "TeamMember": {
+      "title": "Team Member",
+      "description": "An internal KALA team member with admin rights",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "super_admin"] },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "addedBy", "createdAt"]
     }
   },
   "firestore": {
@@ -91,6 +114,14 @@
     "fib": {
       "schema": "FIB",
       "description": "Stored FIB results"
+    },
+    "clients": {
+      "schema": "Client",
+      "description": "List of authorized client emails"
+    },
+    "team": {
+      "schema": "TeamMember",
+      "description": "List of authorized internal team emails"
     }
   }
 }
