@@ -55,7 +55,7 @@ export default function CTAFinal() {
              onClick={() => navigate('/discussion')}
              className="w-full sm:w-auto bg-crimson hover:bg-crimson-rich text-white-primary px-10 py-5 rounded-full font-bold text-[16px] transition-all transform hover:scale-105 active:scale-95 shadow-2xl shadow-crimson/20"
           >
-            Talk with KALA →
+            Talk with Kinema →
           </button>
           <button className="w-full sm:w-auto bg-transparent border border-border-default hover:border-border-strong text-white-primary px-10 py-5 rounded-full font-bold text-[16px] transition-all">
             Learn the Technology

@@ -67,7 +67,7 @@ export default function Hero() {
               onClick={() => navigate('/discussion')}
               className="bg-crimson hover:bg-crimson-rich text-white-primary px-8 py-4 rounded-full font-semibold text-[15px] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-crimson/20"
             >
-              Talk with KALA →
+              Talk with Kinema →
             </button>
             <button className="bg-transparent border border-border-default hover:border-border-strong text-white-primary px-8 py-4 rounded-full font-semibold text-[15px] transition-all">
               How it Works

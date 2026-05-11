@@ -134,7 +134,7 @@ export default function FIBGenerator() {
       });
 
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `KALA-FIB-${activeFilm.title.replace(/\s+/g, '-')}.docx`);
+      saveAs(blob, `KINEMA-FIB-${activeFilm.title.replace(/\s+/g, '-')}.docx`);
     } catch (err) {
       console.error("Word Export failed", err);
     } finally {
@@ -205,7 +205,7 @@ export default function FIBGenerator() {
               <div className="border-y-2 border-black py-4 flex justify-between items-center font-sans tracking-tighter">
                  <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-black" />
-                    <span className="font-bold text-[14px]">KALA</span>
+                    <span className="font-bold text-[14px]">KINEMA</span>
                     <div className="flex items-center gap-1.5 px-2 py-0.5 bg-black/5 border border-black/10 rounded font-mono text-[9px] text-zinc-400 ml-2">
                       <History className="w-3 h-3" />
                       AUTOSAVED
@@ -241,7 +241,7 @@ export default function FIBGenerator() {
                  </div>
                  <div className="space-y-1">
                     <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">PREPARED BY</div>
-                    <div className="font-bold lowercase">KALA Team — Kata.ai × Samara Group</div>
+                    <div className="font-bold lowercase">Kinema Team — Kata.ai × Samara Group</div>
                  </div>
               </div>
 
@@ -314,7 +314,7 @@ export default function FIBGenerator() {
                     </p>
                  </div>
                  <div className="flex justify-between items-end">
-                    <div className="text-[10px] font-bold text-zinc-300">KALA · Kata.ai × Samara Group · Confidential</div>
+                    <div className="text-[10px] font-bold text-zinc-300">Kinema · Kata.ai × Samara Group · Confidential</div>
                     <div className="text-[10px] font-bold text-zinc-300">PAGE 01 of 01</div>
                  </div>
               </div>

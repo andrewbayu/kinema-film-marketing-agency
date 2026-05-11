@@ -83,7 +83,7 @@ export default function Overview() {
 
       {campaigns.length === 0 && !loading && (
         <div className="bg-black-4 border border-border-subtle p-12 rounded-card-lg text-center space-y-4">
-           <h3 className="text-xl font-bold text-white">Welcome to KALA</h3>
+           <h3 className="text-xl font-bold text-white">Welcome to Kinema</h3>
            <p className="text-ink-tertiary max-w-md mx-auto">You don't have any active campaigns. Start by creating a new campaign to analyze audiences and predict box office.</p>
            <button 
             onClick={() => navigate('/campaigns')}

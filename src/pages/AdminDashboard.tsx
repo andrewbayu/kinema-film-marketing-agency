@@ -154,7 +154,7 @@ export default function AdminDashboard() {
             </button>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-crimson" />
-              <span className="font-bold tracking-tight">KALA Admin Portal</span>
+              <span className="font-bold tracking-tight">Kinema Admin Portal</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export default function AdminDashboard() {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white-tertiary" />
               <input 
                 type="email"
-                placeholder={activeTab === 'clients' ? 'client@company.com' : 'name@kala.studio'}
+                placeholder={activeTab === 'clients' ? 'client@company.com' : 'name@kinema.studio'}
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required

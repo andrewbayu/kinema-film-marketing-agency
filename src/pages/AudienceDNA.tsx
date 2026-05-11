@@ -53,7 +53,7 @@ export default function AudienceDNA() {
       });
       
       const link = document.createElement('a');
-      link.download = `KALA-AudienceDNA-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
+      link.download = `KINEMA-AudienceDNA-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -160,7 +160,7 @@ export default function AudienceDNA() {
                </div>
                <div className="text-center space-y-2">
                  <h3 className="text-[18px] font-bold text-ink-primary">AI is Working</h3>
-                 <p className="text-[14px] text-ink-tertiary max-w-sm">Analyzing Indonesian audience profiles based on the KALA dataset... (est. 10–20 seconds)</p>
+                 <p className="text-[14px] text-ink-tertiary max-w-sm">Analyzing Indonesian audience profiles based on the Kinema dataset... (est. 10–20 seconds)</p>
                  <div className="flex justify-center gap-1 mt-2">
                    <motion.div 
                      animate={{ opacity: [0.3, 1, 0.3] }} 

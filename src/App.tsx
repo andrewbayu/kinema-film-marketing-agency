@@ -36,7 +36,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-black-1 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-2xl font-bold text-white-primary mb-4">Unauthorized Access</h1>
         <p className="text-white-tertiary max-w-md mb-8">
-          This portal is restricted to authorized clients only. If you believe this is an error, please contact KALA support.
+          This portal is restricted to authorized clients only. If you believe this is an error, please contact Kinema support.
         </p>
         <button 
           onClick={() => window.location.href = '/'}

@@ -17,8 +17,8 @@ export default function Nav() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img 
-            src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
-            alt="Kala Logo" 
+            src="https://storage.googleapis.com/bluestark_explorer/kinema-logo.png" 
+            alt="Kinema Logo" 
             className="h-10 w-auto" 
             referrerPolicy="no-referrer"
           />
@@ -53,7 +53,7 @@ export default function Nav() {
             onClick={() => navigate('/discussion')}
             className="relative group bg-crimson hover:bg-crimson-rich text-white-primary px-6 py-2.5 rounded-full font-semibold text-[13px] transition-all active:scale-95 shadow-[0_4px_20px_rgba(155,28,28,0.2)]"
           >
-            Talk with KALA →
+            Talk with Kinema →
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-black-4 border border-border-default px-3 py-1.5 rounded text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               Free. No agenda. Let's explore.
             </div>

@@ -55,7 +55,7 @@ export default function BoxPredict() {
       });
       
       const link = document.createElement('a');
-      link.download = `KALA-BoxPredict-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
+      link.download = `KINEMA-BoxPredict-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {

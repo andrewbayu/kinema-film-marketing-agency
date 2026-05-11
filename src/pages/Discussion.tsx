@@ -72,8 +72,8 @@ export default function Discussion() {
           <span className="font-mono text-[11px] font-bold uppercase tracking-widest">Back</span>
         </Link>
         <img 
-          src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
-          alt="Kala Logo" 
+          src="https://storage.googleapis.com/bluestark_explorer/kinema-logo.png" 
+          alt="Kinema Logo" 
           className="h-8 w-auto opacity-80" 
         />
         <div className="w-10" /> {/* Spacer */}

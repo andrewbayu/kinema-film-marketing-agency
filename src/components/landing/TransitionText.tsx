@@ -35,8 +35,8 @@ export default function TransitionText({ text, blackout = false, bgImage, showLo
         {showLogo && (
           <div className="flex justify-center mb-8">
             <img 
-              src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
-              alt="Kala" 
+              src="https://storage.googleapis.com/bluestark_explorer/kinema-logo.png" 
+              alt="Kinema" 
               className="h-16 w-auto opacity-90"
               referrerPolicy="no-referrer"
             />

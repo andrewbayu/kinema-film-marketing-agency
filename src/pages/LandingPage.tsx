@@ -31,7 +31,7 @@ export default function LandingPage() {
         </div>
 
         <TransitionText 
-          text={`That's why KALA exist.\nFounded by the best of minds and experts\nin AI & Digital Marketing Industry.`} 
+          text={`That's why Kinema exist.\nFounded by the best of minds and experts\nin AI & Digital Marketing Industry.`} 
           blackout 
           bgImage="https://storage.googleapis.com/bluestark_explorer/wallpaper-kalaos-2.png"
           showLogo

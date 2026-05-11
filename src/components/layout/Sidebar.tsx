@@ -10,6 +10,7 @@ import {
   Network, 
   MessageCircle,
   Library,
+  LogOut,
   Settings,
   ShieldCheck
 } from 'lucide-react';
@@ -67,15 +68,15 @@ function NavItem({ to, icon: Icon, label, disabled, badge }: NavItemProps) {
 
 export default function Sidebar() {
   const { activeFilm } = useFilmContext();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   return (
     <aside className="w-[220px] fixed inset-y-0 left-0 bg-black-3 border-r border-border-subtle flex flex-col z-40">
       {/* Brand */}
       <div className="p-6 flex items-center gap-3">
         <img 
-          src="https://storage.googleapis.com/bluestark_explorer/Kala.png" 
-          alt="Kala Logo" 
+          src="https://storage.googleapis.com/bluestark_explorer/kinema-logo.png" 
+          alt="Kinema Logo" 
           className="h-10 w-auto" 
           referrerPolicy="no-referrer"
         />
@@ -120,23 +121,59 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Active Film Indicator */}
-      {activeFilm && (
-        <div className="p-4 border-t border-border-subtle bg-black-2/50">
-          <div className="flex items-center gap-2 mb-2">
-             <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
-             <span className="text-[9px] font-mono font-bold text-green-kala uppercase">ACTIVE FILM</span>
+      {/* Active Film & User Section */}
+      <div className="border-t border-border-subtle bg-black-2/50 divide-y divide-border-subtle">
+        {activeFilm && (
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+               <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
+               <span className="text-[9px] font-mono font-bold text-green-kala uppercase">ACTIVE FILM</span>
+            </div>
+            <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
+            <div className="text-[10px] text-ink-tertiary font-medium">
+              {activeFilm.genre} · Week 4 · T-28 days
+            </div>
           </div>
-          <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
-          <div className="text-[10px] text-ink-tertiary font-medium">
-            {activeFilm.genre} · Week 4 · T-28 days
+        )}
+
+        <div className="p-4 space-y-3">
+          {user && (
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full border border-border-subtle bg-white/5 flex items-center justify-center overflow-hidden">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-[10px] font-bold text-ink-tertiary">
+                    {user.email?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-bold text-ink-primary truncate">
+                  {user.displayName || 'User'}
+                </div>
+                <div className="text-[10px] text-ink-tertiary truncate">
+                  {user.email}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <button className="flex items-center gap-2 text-ink-secondary hover:text-ink-primary transition-colors text-[11px] font-medium group px-2 py-1.5 rounded-md hover:bg-white/5">
+              <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
+              Settings
+            </button>
+            <button 
+              onClick={() => logout()}
+              className="flex items-center gap-2 text-ink-secondary hover:text-crimson transition-colors text-[11px] font-medium group px-2 py-1.5 rounded-md hover:bg-crimson/5 w-full text-left"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Logout
+            </button>
           </div>
-          <button className="mt-4 flex items-center gap-2 text-ink-secondary hover:text-ink-primary transition-colors text-[11px] font-medium group">
-            <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
-            Settings
-          </button>
         </div>
-      )}
+      </div>
     </aside>
   );
 }
