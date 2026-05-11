@@ -46,7 +46,7 @@ export default function Technology() {
       id: '03',
       kicker: 'BEFORE CREATIVE ASSETS ARE PRODUCED',
       name: 'CineForge™',
-      body: 'A cinematically great trailer isn\'t necessarily a great marketing tool.\n\nWe design and test all assets — trailers, posters, captions, TikTok content — based on data of what truly resonates with your target audience.\n\nCreative decisions at KALA aren\'t boardroom votes. There are numbers behind every choice.',
+      body: 'Sebuah trailer yang bagus secara sinematik belum tentu menjadi alat pemasaran yang hebat.\n\nKami merancang dan menguji semua aset — trailer, poster, takarir, konten TikTok — berdasarkan data tentang apa yang benar-benar beresonansi dengan audiens target Anda.\n\nKeputusan kreatif di Kinema bukan sekadar hasil voting di ruang rapat. Ada angka di balik setiap pilihan.',
       visual: (
         <div className="grid grid-cols-2 gap-2">
           {['Tagline', 'Trailer Hook', 'TikTok Caption', 'WA Blast', 'Press Release', 'Creator Brief'].map((item, i) => (

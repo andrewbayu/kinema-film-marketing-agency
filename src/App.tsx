@@ -21,7 +21,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import { LogIn } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAuthorized } = useAuth();
+  const { user, loading, isAuthorized, logout } = useAuth();
 
   if (loading) return (
     <div className="min-h-screen bg-black-1 flex items-center justify-center">
@@ -34,16 +34,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-black-1 flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-2xl font-bold text-white-primary mb-4">Unauthorized Access</h1>
-        <p className="text-white-tertiary max-w-md mb-8">
-          This portal is restricted to authorized clients only. If you believe this is an error, please contact Kinema support.
+        <h1 className="text-3xl font-bold text-white-primary mb-4">Akses Terbatas</h1>
+        <p className="text-white-tertiary max-w-md mb-8 leading-relaxed">
+          Portal ini hanya ditujukan untuk klien resmi Kinema. Jika Anda merasa ini adalah kesalahan, silakan hubungi tim support Kinema.
         </p>
-        <button 
-          onClick={() => window.location.href = '/'}
-          className="bg-crimson hover:bg-crimson-rich text-white px-8 py-3 rounded-full font-bold transition-all"
-        >
-          Back to Home
-        </button>
+        <div className="flex flex-col gap-4">
+          <button 
+            onClick={() => logout()}
+            className="bg-crimson hover:bg-crimson-rich text-white px-10 py-4 rounded-full font-bold transition-all shadow-lg shadow-crimson/20"
+          >
+            Keluar & Kembali ke Beranda
+          </button>
+          <button 
+            onClick={() => window.location.href = 'mailto:hello@kinema.id'}
+            className="text-white-tertiary hover:text-white-primary text-sm font-medium transition-colors"
+          >
+            Hubungi Support
+          </button>
+        </div>
       </div>
     );
   }

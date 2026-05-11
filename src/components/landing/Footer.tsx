@@ -15,7 +15,7 @@ export default function Footer() {
               <img 
                 src="https://storage.googleapis.com/bluestark_explorer/kinema-logo.png" 
                 alt="Kinema Logo" 
-                className="h-5 w-auto opacity-80 hover:opacity-100 transition-opacity" 
+                className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity" 
                 referrerPolicy="no-referrer"
               />
             </div>

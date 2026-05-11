@@ -6,7 +6,7 @@ import {
   BoxPredictResult,
   FIBContent
 } from './types';
-import { KALA_SYSTEM_PROMPT } from './prompts';
+import { KINEMA_SYSTEM_PROMPT } from './prompts';
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || ''
@@ -49,7 +49,7 @@ async function generateWithRetry(prompt: string, config: any, retries = 3): Prom
 
 export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceDNAResult> {
   const prompt = `
-    ${KALA_SYSTEM_PROMPT}
+    ${KINEMA_SYSTEM_PROMPT}
 
     Kamu sedang menjalankan AudienceDNA™ untuk film berikut:
 
@@ -118,7 +118,7 @@ export async function runBoxPredict(
   audienceResult: AudienceDNAResult
 ): Promise<BoxPredictResult> {
   const prompt = `
-    ${KALA_SYSTEM_PROMPT}
+    ${KINEMA_SYSTEM_PROMPT}
 
     Kamu sedang menjalankan BoxPredict™ Simulation.
     
@@ -173,7 +173,7 @@ export async function generateFIB(
   boxResult: BoxPredictResult
 ): Promise<FIBContent> {
   const prompt = `
-    ${KALA_SYSTEM_PROMPT}
+    ${KINEMA_SYSTEM_PROMPT}
     Tugas: Generate Film Intelligence Brief (FIB) Profesional.
     DATA: ${JSON.stringify({ filmInput, audienceResult, boxResult })}
 

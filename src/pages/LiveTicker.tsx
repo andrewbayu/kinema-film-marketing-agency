@@ -115,7 +115,7 @@ export default function LiveTicker() {
          </div>
          <p className="text-[12px] text-ink-tertiary italic max-w-lg">
             Last updated: {new Date().toLocaleString('en-US')} WIB. 
-            Occupancy projections are calculated using KALA's predictive model based on current booking velocity.
+            Occupancy projections are calculated using Kinema's predictive model based on current booking velocity.
          </p>
       </div>
     </div>

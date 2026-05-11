@@ -20,8 +20,8 @@ export default function ClientPortal() {
           </div>
           
           <p className="text-[17px] text-white-secondary leading-relaxed">
-            Every KALA client has access to a dashboard displaying everything in progress — in real-time, whenever you want to open it.<br /><br />
-            No need to wait for weekly reports. No need to ask "what's the update?" Everything is in one place.
+            Setiap klien Kinema memiliki akses ke dashboard yang menampilkan semua progres — secara real-time, kapan pun Anda ingin membukanya.<br /><br />
+            Tidak perlu menunggu laporan mingguan. Tidak perlu bertanya "apa update-nya?" Semuanya ada di satu tempat.
           </p>
 
           <button 
@@ -77,7 +77,7 @@ export default function ClientPortal() {
                     <div className="flex justify-between items-center border-b border-white/5 pb-6">
                       <div className="flex items-center gap-2 text-crimson font-mono text-[10px] font-bold">
                         <div className="w-2 h-2 rounded-full bg-crimson" />
-                        KALA CLIENT PORTAL
+                        KINEMA CLIENT PORTAL
                       </div>
                       <div className="text-[10px] font-mono text-white-tertiary">[Film Name — Confidential] · T-14 days to release</div>
                     </div>

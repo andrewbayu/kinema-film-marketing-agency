@@ -127,7 +127,7 @@ export default function Sidebar() {
           <div className="p-4">
             <div className="flex items-center gap-2 mb-2">
                <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
-               <span className="text-[9px] font-mono font-bold text-green-kala uppercase">ACTIVE FILM</span>
+               <span className="text-[9px] font-mono font-bold text-green-kala uppercase">FILM AKTIF</span>
             </div>
             <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
             <div className="text-[10px] text-ink-tertiary font-medium">
