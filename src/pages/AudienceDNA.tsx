@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { dbService } from '../services/dbService';
 import { toPng } from 'html-to-image';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export default function AudienceDNA() {
   const navigate = useNavigate();
@@ -98,6 +99,12 @@ export default function AudienceDNA() {
 
   return (
     <div className="grid grid-cols-[380px_1fr] gap-8 h-full max-w-7xl mx-auto">
+      <LoadingOverlay 
+        isVisible={loading} 
+        type="audience"
+        title="Analyzing Audience DNA"
+        subtitle="Processing Kinema behavioral datasets to identify high-resonance segments..."
+      />
       {/* Left: Input Form */}
       <aside className="space-y-6">
         <div className="space-y-1">

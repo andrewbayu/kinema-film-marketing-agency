@@ -36,6 +36,7 @@ import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toPng } from 'html-to-image';
 import { CineForgeSource as CineForgeSourceType } from '../lib/types';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export default function CineForge() {
   const navigate = useNavigate();
@@ -45,6 +46,9 @@ export default function CineForge() {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // Generation Options
+  const [useLiveTrends, setUseLiveTrends] = useState(false);
 
   // Dataset State
   const [sources, setSources] = useState<CineForgeSourceType[]>([]);
@@ -92,7 +96,8 @@ export default function CineForge() {
         activeFilm,
         audienceDNAOutput,
         contentCount,
-        sources
+        sources,
+        useLiveTrends
       );
       setCineForgeOutput(result);
 
@@ -168,6 +173,12 @@ export default function CineForge() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 font-sans">
+      <LoadingOverlay 
+        isVisible={loading}
+        type="forge"
+        title="Forging Content Strategy"
+        subtitle="Cross-referencing AudienceDNA™ with source datasets and Indonesian trends..."
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -216,6 +227,43 @@ export default function CineForge() {
                      <span>MIN (3)</span>
                      <span>MAX (9)</span>
                    </div>
+                 </div>
+
+                 {/* Trend Toggle */}
+                 <div className="pt-2">
+                    <button 
+                      onClick={() => setUseLiveTrends(!useLiveTrends)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-card-sm border transition-all h-14",
+                        useLiveTrends 
+                          ? "bg-crimson/5 border-crimson/30 shadow-[0_0_15px_-5px_rgba(238,29,35,0.2)]" 
+                          : "bg-black-2 border-border-subtle hover:border-border-strong"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          useLiveTrends ? "bg-crimson animate-pulse" : "bg-ink-tertiary"
+                        )} />
+                        <div className="text-left">
+                          <div className="text-[12px] font-bold text-ink-primary">Live Trend Awareness</div>
+                          <div className="text-[9px] text-ink-tertiary uppercase font-mono">Google Search Grounding</div>
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-5 rounded-full relative transition-colors",
+                        useLiveTrends ? "bg-crimson" : "bg-black-3"
+                      )}>
+                        <motion.div 
+                          animate={{ x: useLiveTrends ? 20 : 2 }}
+                          initial={false}
+                          className="absolute top-1 left-0 w-3 h-3 bg-white rounded-full shadow-sm" 
+                        />
+                      </div>
+                    </button>
+                    <p className="mt-2 text-[10px] text-ink-tertiary italic px-2 leading-tight">
+                       {useLiveTrends ? "Active: AI is scraping Indonesian trends & viral events." : "Off: Using static film context only."}
+                    </p>
                  </div>
                </div>
             </div>

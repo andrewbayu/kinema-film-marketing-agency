@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
 import { toPng } from 'html-to-image';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export default function BoxPredict() {
   const navigate = useNavigate();
@@ -142,6 +143,12 @@ export default function BoxPredict() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20">
+      <LoadingOverlay 
+        isVisible={loading}
+        type="predict"
+        title="Simulating Box Office"
+        subtitle="Calculating admissions scenarios and market sentiment sensitivity..."
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">

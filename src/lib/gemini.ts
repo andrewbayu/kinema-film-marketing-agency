@@ -220,7 +220,8 @@ export async function generateCineForgeContent(
   filmInput: FilmProfileInput,
   audienceResult: AudienceDNAResult,
   contentCount: number,
-  dataset: CineForgeSource[]
+  dataset: CineForgeSource[],
+  useLiveTrends?: boolean
 ): Promise<CineForgeResult> {
   const datasetContext = dataset.length > 0 
     ? `DATASET / SOURCE MATERIALS:\n${dataset.map(d => `- [${d.type}] ${d.value} (${d.label || ''})`).join('\n')}`
@@ -241,10 +242,13 @@ export async function generateCineForgeContent(
 
     ${datasetContext}
 
+    ${useLiveTrends ? "LIVE TREND AWARENESS ENABLED: Cari tren viral terbaru di Indonesia, berita hiburan terkini, dan event yang sedang hangat hari ini untuk menghubungkan materi film dengan zeitgeist saat ini." : ""}
+
     JUMLAH KONTEN YANG DIMINTA: ${contentCount}
 
     Tugas: Hasilkan ${contentCount} ide konten kreatif. 
     WAJIB: Jika ada dataset (URL/Video/Artikel), gunakan informasi dari dataset tersebut sebagai dasar materi konten (misal: quote dari artikel, momen dari video, atau visual dari asset).
+    ${useLiveTrends ? "INTEGRASI TREN: Pastikan setidaknya 2-3 konten memiliki kaitan langsung dengan tren atau event yang sedang berlangsung minggu ini/hari ini." : ""}
 
     Format JSON:
     {
@@ -270,12 +274,16 @@ export async function generateCineForgeContent(
   `;
 
   try {
-    const response = await generateWithRetry(
-      prompt,
-      {
-        responseMimeType: 'application/json'
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        tools: useLiveTrends ? [{ googleSearch: {} }] : [],
+        // Required when using tools with Gemini 3
+        toolConfig: useLiveTrends ? { includeServerSideToolInvocations: true } : undefined
       }
-    );
+    });
     
     const text = response.text || '';
     return JSON.parse(text) as CineForgeResult;

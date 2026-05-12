@@ -25,6 +25,7 @@ import { dbService } from '../services/dbService';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import { toPng } from 'html-to-image';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export default function FIBGenerator() {
   const navigate = useNavigate();
@@ -212,6 +213,11 @@ export default function FIBGenerator() {
 
   return (
     <div className="grid grid-cols-[1fr_320px] gap-8 h-full max-w-7xl mx-auto pb-20">
+      <LoadingOverlay 
+        isVisible={loading}
+        title="Synthesizing Intelligence Brief"
+        subtitle="Compiling multi-source data points into an executive strategic document..."
+      />
       {/* Left: Document Preview (PDF Ready) */}
       <section 
         ref={reportRef}
