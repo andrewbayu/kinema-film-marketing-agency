@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Film, AudienceDNAResult, BoxPredictResult } from '../lib/types';
+import { Film, AudienceDNAResult, BoxPredictResult, CineForgeResult } from '../lib/types';
 import { mockFilms } from '../lib/mockData';
 
 interface FilmContextType {
@@ -9,6 +9,8 @@ interface FilmContextType {
   setAudienceDNAOutput: (result: AudienceDNAResult | null) => void;
   boxPredictOutput: BoxPredictResult | null;
   setBoxPredictOutput: (result: BoxPredictResult | null) => void;
+  cineForgeOutput: CineForgeResult | null;
+  setCineForgeOutput: (result: CineForgeResult | null) => void;
 }
 
 const FilmContext = createContext<FilmContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ export function FilmProvider({ children }: { children: ReactNode }) {
   });
   const [audienceDNAOutput, setAudienceDNAOutput] = useState<AudienceDNAResult | null>(null);
   const [boxPredictOutput, setBoxPredictOutput] = useState<BoxPredictResult | null>(null);
+  const [cineForgeOutput, setCineForgeOutput] = useState<CineForgeResult | null>(null);
 
   const handleSetActiveFilm = (film: Film | null) => {
     setActiveFilm(film);
@@ -39,6 +42,8 @@ export function FilmProvider({ children }: { children: ReactNode }) {
         setAudienceDNAOutput,
         boxPredictOutput,
         setBoxPredictOutput,
+        cineForgeOutput,
+        setCineForgeOutput,
       }}
     >
       {children}

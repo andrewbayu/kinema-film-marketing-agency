@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
-import domtoimage from 'dom-to-image-more';
+import { toPng } from 'html-to-image';
 
 export default function BoxPredict() {
   const navigate = useNavigate();
@@ -45,13 +45,26 @@ export default function BoxPredict() {
     if (!reportRef.current || !boxPredictOutput) return;
     
     setExporting(true);
+    // Brief delay to ensure any animations or rendering are finished
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     try {
       const element = reportRef.current;
-      const dataUrl = await domtoimage.toPng(element, {
-        quality: 1.0,
-        bgcolor: '#0a0a0a',
-        width: element.offsetWidth,
-        height: element.offsetHeight
+      
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        backgroundColor: '#0a0a0a',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: {
+          transform: 'scale(1)',
+          margin: '0',
+          padding: '0',
+        },
+        filter: (node: HTMLElement) => {
+          const classList = node.classList;
+          return classList ? !classList.contains('print-hidden') : true;
+        }
       });
       
       const link = document.createElement('a');
@@ -168,7 +181,7 @@ export default function BoxPredict() {
       </section>
 
       {/* Results Section */}
-      <div ref={reportRef} className="bg-black p-4">
+      <div ref={reportRef} className="bg-black p-8 rounded-card-lg border border-border-subtle">
         <AnimatePresence mode="wait">
         {loading ? (
              <motion.div 
@@ -248,11 +261,36 @@ export default function BoxPredict() {
                       ))}
                    </div>
 
-                   <div className="pt-6 border-t border-border-subtle space-y-3">
-                      <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">WINDOW RECOMMENDATION</div>
-                      <p className="text-[13px] text-green-kala font-medium leading-relaxed">
-                        {boxPredictOutput.releaseWindowRecommendation}
-                      </p>
+                   <div className="pt-6 border-t border-border-subtle space-y-4">
+                      {boxPredictOutput.weeklyDecayRate && (
+                        <div>
+                          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-1">STABILIZATION PREDICTION</div>
+                          <div className="flex items-center gap-2">
+                             <div className="text-[20px] font-bold text-ink-primary font-mono tracking-tighter">{boxPredictOutput.weeklyDecayRate}</div>
+                             <div className="text-[10px] text-ink-tertiary uppercase leading-tight">Est. Weekly<br/>Hold Drop</div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">WINDOW RECOMMENDATION</div>
+                        <p className="text-[13px] text-green-kala font-medium leading-relaxed">
+                          {boxPredictOutput.releaseWindowRecommendation}
+                        </p>
+                      </div>
+
+                      {boxPredictOutput.geographicalTargeting && (
+                         <div className="space-y-3 pt-2">
+                           <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">GEO TARGETING</div>
+                           <div className="flex flex-wrap gap-2">
+                              {boxPredictOutput.geographicalTargeting.map((city, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-white/5 border border-border-subtle rounded text-[11px] text-ink-secondary">
+                                  {city}
+                                </span>
+                              ))}
+                           </div>
+                         </div>
+                      )}
                    </div>
                 </div>
               </div>

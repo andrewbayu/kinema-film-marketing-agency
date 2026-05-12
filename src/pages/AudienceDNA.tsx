@@ -8,7 +8,7 @@ import { Users, Info, ChevronRight, FileDown, BrainCircuit, History, AlertTriang
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { dbService } from '../services/dbService';
-import domtoimage from 'dom-to-image-more';
+import { toPng } from 'html-to-image';
 
 export default function AudienceDNA() {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function AudienceDNA() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const reportRef = useRef<HTMLElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Load latest result if available for active film
   useEffect(() => {
@@ -43,13 +43,27 @@ export default function AudienceDNA() {
     if (!reportRef.current || !audienceDNAOutput) return;
     
     setExporting(true);
+    // Brief delay to ensure any animations or rendering are finished
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     try {
       const element = reportRef.current;
-      const dataUrl = await domtoimage.toPng(element, {
-        quality: 1.0,
-        bgcolor: '#0a0a0a',
-        width: element.offsetWidth,
-        height: element.offsetHeight
+      
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        backgroundColor: '#0a0a0a',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: {
+          transform: 'scale(1)',
+          margin: '0',
+          padding: '0',
+        },
+        // Filtering out any problematic nodes if necessary
+        filter: (node: HTMLElement) => {
+          const classList = node.classList;
+          return classList ? !classList.contains('print-hidden') : true;
+        }
       });
       
       const link = document.createElement('a');
@@ -126,9 +140,10 @@ export default function AudienceDNA() {
       </aside>
 
       {/* Right: Results Area */}
-      <section ref={reportRef} className="min-h-0 flex flex-col p-4 bg-black">
-        <AnimatePresence mode="wait">
-          {!audienceDNAOutput && !loading ? (
+      <section className="min-h-0 flex flex-col print:p-0">
+        <div ref={reportRef} className="flex-1 p-8 bg-black rounded-card-lg border border-border-subtle overflow-y-auto">
+          <AnimatePresence mode="wait">
+            {!audienceDNAOutput && !loading ? (
             <motion.div 
               key="empty"
               initial={{ opacity: 0, y: 10 }}
@@ -206,11 +221,27 @@ export default function AudienceDNA() {
                 </div>
               </div>
 
-              <div className="bg-black-4 border border-border-subtle rounded-card-lg p-8 space-y-4">
-                <h3 className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">KEY INSIGHT</h3>
-                <p className="text-[15px] text-ink-primary leading-relaxed font-body whitespace-pre-wrap">
-                  {audienceDNAOutput.insight}
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-black-4 border border-border-subtle rounded-card-lg p-8 space-y-4">
+                  <h3 className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">KEY INSIGHT</h3>
+                  <p className="text-[15px] text-ink-primary leading-relaxed font-body whitespace-pre-wrap">
+                    {audienceDNAOutput.insight}
+                  </p>
+                </div>
+
+                {audienceDNAOutput.interestCore && (
+                  <div className="bg-black-4 border border-border-subtle rounded-card-lg p-8 space-y-4">
+                    <h3 className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">INTEREST CORE™</h3>
+                    <div className="flex flex-wrap gap-2">
+                       {audienceDNAOutput.interestCore.map((interest, idx) => (
+                         <div key={idx} className="px-3 py-1.5 bg-white/5 border border-border-subtle rounded-button flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-crimson" />
+                            <span className="text-[13px] font-medium text-ink-secondary">{interest}</span>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 pt-4 print:hidden">
@@ -243,6 +274,7 @@ export default function AudienceDNA() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </section>
     </div>
   );

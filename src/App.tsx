@@ -15,6 +15,7 @@ import BoxPredict from './pages/BoxPredict';
 import LiveTicker from './pages/LiveTicker';
 import Library from './pages/Library';
 import FIBGenerator from './pages/FIBGenerator';
+import CineForge from './pages/CineForge';
 import LandingPage from './pages/LandingPage';
 import Discussion from './pages/Discussion';
 import AdminDashboard from './pages/AdminDashboard';
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="audience-dna" element={<AudienceDNA />} />
               <Route path="box-predict" element={<BoxPredict />} />
               <Route path="live-ticker" element={<LiveTicker />} />
+              <Route path="cineforge" element={<CineForge />} />
               <Route path="library" element={<Library />} />
               <Route path="fib/:filmId" element={<FIBGenerator />} />
             </Route>

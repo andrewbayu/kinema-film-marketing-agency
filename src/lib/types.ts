@@ -74,12 +74,15 @@ export interface SegmentResult {
   triggerMechanism: string;
   messagingApproach: string;
   platform: string;
+  marketSaturation?: number; // 0-100
+  mediaHabits?: string[];
 }
 
 export interface AudienceDNAResult {
   segments: SegmentResult[];
   primarySegment: string;
   insight: string;
+  interestCore?: string[];
   channelPriority: Array<{
     channel: string;
     priority: 'High' | 'Medium' | 'Low';
@@ -109,6 +112,8 @@ export interface BoxPredictResult {
   riskFlags: string[];
   releaseWindowRecommendation: string;
   methodology: string;
+  weeklyDecayRate?: string; // Estimated drop percentage per week
+  geographicalTargeting?: string[]; // Top 5 target cities
 }
 
 export interface FIBContent {
@@ -119,6 +124,39 @@ export interface FIBContent {
   keyRisks: string[];
   nextSteps: string[];
   methodologyNote: string;
+  marketingMix?: Array<{
+    channel: string;
+    allocation: number; // percentage
+    objective: string;
+  }>;
+  usp?: string;
+}
+
+export interface CineForgeContent {
+  id: string;
+  title: string;
+  type: 'Video' | 'Graphic' | 'Copy' | 'Hybrid';
+  targetSegment: string;
+  resonanceScore: number;
+  distributionChannel: 'Lead Actor' | 'Supporting Cast' | 'Homeless Media' | 'Paid Ads' | 'Official Account' | 'WA Blast';
+  contentHook: string;
+  visualDirection: string;
+  captionTemplate: string;
+  cta: string;
+}
+
+export interface CineForgeSource {
+  type: 'URL' | 'Video' | 'Article' | 'Image';
+  value: string;
+  label?: string;
+}
+
+export interface CineForgeResult {
+  sessionTitle: string;
+  generatedDate: string;
+  campaignGoal: string;
+  contents: CineForgeContent[];
+  sourceReference?: string;
 }
 
 export interface LiveTickerData {

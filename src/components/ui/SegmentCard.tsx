@@ -54,20 +54,42 @@ export default function SegmentCard({ segment }: SegmentCardProps) {
         </div>
       </div>
 
-      {/* Resonance Score */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-[11px] font-bold text-ink-primary uppercase tracking-tight">
-          <span>Resonance Score</span>
-          <span className="text-crimson">{resonanceScore}%</span>
+      {/* Main Metrics */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex justify-between text-[11px] font-bold text-ink-primary uppercase tracking-tight">
+            <span>Resonance Score</span>
+            <span className="text-crimson">{resonanceScore}%</span>
+          </div>
+          <div className="h-1.5 bg-black-2 rounded-full overflow-hidden">
+            <div className="h-full bg-crimson" style={{ width: `${resonanceScore}%` }} />
+          </div>
         </div>
-        <div className="h-1.5 bg-black-2 rounded-full overflow-hidden">
-          <div className="h-full bg-crimson" style={{ width: `${resonanceScore}%` }} />
+        <div className="space-y-2">
+          <div className="flex justify-between text-[11px] font-bold text-ink-primary uppercase tracking-tight">
+            <span>Market Saturation</span>
+            <span className="text-orange-kala">{segment.marketSaturation ?? 0}%</span>
+          </div>
+          <div className="h-1.5 bg-black-2 rounded-full overflow-hidden">
+            <div className="h-full bg-orange-kala" style={{ width: `${segment.marketSaturation ?? 0}%` }} />
+          </div>
         </div>
       </div>
 
       {/* Behavioral Dimensions */}
       <div className="space-y-4 pt-4 border-t border-border-subtle">
-        <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">BEHAVIORAL ANALYSIS</div>
+        <div className="flex justify-between items-center">
+          <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">BEHAVIORAL ANALYSIS</div>
+          {segment.mediaHabits && (
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+              {segment.mediaHabits.slice(0, 3).map((h, idx) => (
+                <span key={idx} className="text-[8px] font-mono bg-white/5 border border-border-subtle px-1.5 py-0.5 rounded text-ink-tertiary uppercase whitespace-nowrap">
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
            {scoreDimensions.map((dim) => (
              <div key={dim.label} className="space-y-1.5">

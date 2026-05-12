@@ -114,7 +114,7 @@ export default function Sidebar() {
         <div>
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">PRODUCTION</div>
           <div className="space-y-1">
-             <NavItem to="/cineforge" icon={Wand2} label="CineForge™" disabled badge="soon" />
+             <NavItem to="/cineforge" icon={Wand2} label="CineForge™" />
              <NavItem to="/stargraph" icon={Network} label="StarGraph™" disabled badge="soon" />
              <NavItem to="/fanconvo" icon={MessageCircle} label="FanConvo™" disabled badge="soon" />
           </div>

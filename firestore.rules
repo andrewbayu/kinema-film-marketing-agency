@@ -150,5 +150,22 @@ service cloud.firestore {
       allow update: if false; 
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
+
+    // CineForge
+    match /cineforge/{forgeId} {
+      function isValidForge(data) {
+        return (data.userId == request.auth.uid || isAdmin())
+            && (data.campaignId is string || data.campaignId == null)
+            && (data.results is map || data.results is string)
+            && (data.createdAt is timestamp || data.createdAt == null);
+      }
+
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isSignedIn() && isValidForge(incoming())
+                     && belongsToOwnCampaign(incoming().campaignId)
+                     && incoming().createdAt == request.time;
+      allow update: if false; 
+      allow delete: if isOwner(existing().userId) || isAdmin();
+    }
   }
 }

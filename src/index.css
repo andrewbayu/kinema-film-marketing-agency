@@ -114,14 +114,21 @@
   }
 
   body {
-    background-color: white !important;
-    color: black !important;
+    background-color: #0A0A0A !important;
+    color: #F5F0EB !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+
+  body::after {
+    display: none !important;
   }
 
   /* Force background colors in browsers */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
   .flex-1 {
@@ -134,12 +141,31 @@
     display: block !important;
   }
 
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  aside, nav, header, [role="banner"], .print-hidden {
+    display: none !important;
+  }
+
   section {
     box-shadow: none !important;
     border: none !important;
-    background-color: transparent !important;
     margin: 0 !important;
-    padding: 20px !important;
-    min-height: auto !important;
+    padding: 24px !important;
+    width: 100% !important;
+    background-color: #0A0A0A !important;
+  }
+
+  .rounded-card-lg, .rounded-card-md {
+     border-radius: 8px !important;
   }
 }

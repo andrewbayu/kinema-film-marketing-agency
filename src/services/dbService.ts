@@ -13,7 +13,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { AudienceDNAResult, BoxPredictResult, FilmProfileInput, BoxPredictInput } from '../lib/types';
+import { AudienceDNAResult, BoxPredictResult, FilmProfileInput, BoxPredictInput, CineForgeResult } from '../lib/types';
 
 enum OperationType {
   CREATE = 'create',
@@ -187,6 +187,40 @@ export const dbService = {
       const snapshot = await getDocs(q);
       if (snapshot.empty) return null;
       return snapshot.docs[0].data().results as any;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  },
+
+  // CineForge Results
+  async saveCineForge(campaignId: string, results: CineForgeResult) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) throw new Error("Auth required");
+
+    const path = 'cineforge';
+    try {
+      await addDoc(collection(db, path), {
+        campaignId,
+        userId,
+        results,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async getLatestCineForge(campaignId: string) {
+    const path = 'cineforge';
+    try {
+      const q = query(
+        collection(db, path),
+        where('campaignId', '==', campaignId),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      return snapshot.docs[0].data().results as CineForgeResult;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, path);
     }

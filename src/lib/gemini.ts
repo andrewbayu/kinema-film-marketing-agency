@@ -4,9 +4,11 @@ import {
   AudienceDNAResult, 
   BoxPredictInput, 
   BoxPredictResult,
-  FIBContent
+  FIBContent,
+  CineForgeResult,
+  CineForgeSource
 } from './types';
-import { KINEMA_SYSTEM_PROMPT } from './prompts';
+import { KINEMA_SYSTEM_PROMPT, CINEFORGE_PROMPT } from './prompts';
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || ''
@@ -83,11 +85,14 @@ export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceD
           "resonanceScore": number,
           "triggerMechanism": "string",
           "messagingApproach": "string",
-          "platform": "string"
+          "platform": "string",
+          "marketSaturation": number,
+          "mediaHabits": ["string"]
         }
       ],
       "primarySegment": "string",
-      "insight": "analisis 150-200 kata tentang landscape penonton film ini, termasuk tren eksternal yang kamu temukan",
+      "insight": "analisis 150-200 kata tentang landscape penonton film ini, termasuk tren eksternal yang kamu temukan. Berikan data yang realistis.",
+      "interestCore": ["string"],
       "channelPriority": [
         { "channel": "string", "priority": "Tinggi" | "Sedang" | "Rendah", "reason": "string" }
       ]
@@ -145,7 +150,9 @@ export async function runBoxPredict(
       "sensitivity": [{ "dimension": "string", "impact": number, "direction": "Positif" | "Negatif", "note": "string" }],
       "riskFlags": ["string"],
       "releaseWindowRecommendation": "string",
-      "methodology": "Berikan penjelasan bagaimana faktor eksternal (hasil crawling) mempengaruhi angka ini"
+      "methodology": "Berikan penjelasan bagaimana faktor eksternal (hasil crawling) mempengaruhi angka ini",
+      "weeklyDecayRate": "string (e.g. -45% for 2nd week)",
+      "geographicalTargeting": ["string (Top 5 cities)"]
     }
   `;
 
@@ -185,7 +192,11 @@ export async function generateFIB(
       "releaseWindowAnalysis": "string",
       "keyRisks": ["string"],
       "nextSteps": ["string"],
-      "methodologyNote": "string"
+      "methodologyNote": "string",
+      "marketingMix": [
+        { "channel": "string", "allocation": number, "objective": "string" }
+      ],
+      "usp": "string (Unique Selling Point/Key hook)"
     }
   `;
 
@@ -201,6 +212,75 @@ export async function generateFIB(
     return JSON.parse(text) as FIBContent;
   } catch (error) {
     console.error("FIB Generation AI Error:", error);
+    throw error;
+  }
+}
+
+export async function generateCineForgeContent(
+  filmInput: FilmProfileInput,
+  audienceResult: AudienceDNAResult,
+  contentCount: number,
+  dataset: CineForgeSource[]
+): Promise<CineForgeResult> {
+  const datasetContext = dataset.length > 0 
+    ? `DATASET / SOURCE MATERIALS:\n${dataset.map(d => `- [${d.type}] ${d.value} (${d.label || ''})`).join('\n')}`
+    : "No additional dataset provided.";
+
+  const prompt = `
+    ${KINEMA_SYSTEM_PROMPT}
+    ${CINEFORGE_PROMPT}
+
+    Kamu sedang menjalankan CineForge™ untuk film:
+    JUDUL: ${filmInput.title}
+    GENRE: ${filmInput.genre}
+    LEAD: ${filmInput.leadCast}
+    SUTRADARA: ${filmInput.director || 'N/A'}
+
+    DATA AUDIENCEDNA:
+    ${JSON.stringify(audienceResult.segments)}
+
+    ${datasetContext}
+
+    JUMLAH KONTEN YANG DIMINTA: ${contentCount}
+
+    Tugas: Hasilkan ${contentCount} ide konten kreatif. 
+    WAJIB: Jika ada dataset (URL/Video/Artikel), gunakan informasi dari dataset tersebut sebagai dasar materi konten (misal: quote dari artikel, momen dari video, atau visual dari asset).
+
+    Format JSON:
+    {
+      "sessionTitle": "string (Nama campaign session)",
+      "generatedDate": "string (format ISO)",
+      "campaignGoal": "string (Tujuan utama campaign)",
+      "sourceReference": "string (Penjelasan singkat bagaimana dataset/source digunakan)",
+      "contents": [
+        {
+          "id": "string (unique id)",
+          "title": "string",
+          "type": "Video" | "Graphic" | "Copy" | "Hybrid",
+          "targetSegment": "string (nama segment dari data AudienceDNA)",
+          "resonanceScore": number,
+          "distributionChannel": "Lead Actor" | "Supporting Cast" | "Homeless Media" | "Paid Ads" | "Official Account" | "WA Blast",
+          "contentHook": "string (apa yang terjadi di 3 detik pertama)",
+          "visualDirection": "string (moodbox deskripsi visual)",
+          "captionTemplate": "string (template caption sosial media)",
+          "cta": "string (Call to action)"
+        }
+      ]
+    }
+  `;
+
+  try {
+    const response = await generateWithRetry(
+      prompt,
+      {
+        responseMimeType: 'application/json'
+      }
+    );
+    
+    const text = response.text || '';
+    return JSON.parse(text) as CineForgeResult;
+  } catch (error) {
+    console.error("CineForge Generation AI Error:", error);
     throw error;
   }
 }

@@ -15,7 +15,8 @@ import {
   Loader2,
   FileDown,
   ExternalLink,
-  Printer
+  Printer,
+  ImageIcon
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -23,6 +24,7 @@ import { cn } from '../lib/utils';
 import { dbService } from '../services/dbService';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
+import { toPng } from 'html-to-image';
 
 export default function FIBGenerator() {
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ export default function FIBGenerator() {
   const [fibContent, setFibContent] = useState<FIBContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportingImage, setExportingImage] = useState(false);
   const [status, setStatus] = useState<'Draft' | 'Final'>('Draft');
   const [error, setError] = useState<string | null>(null);
   const reportRef = useRef<HTMLElement>(null);
@@ -90,6 +93,42 @@ export default function FIBGenerator() {
 
   const handleExportPDF = () => {
     window.print();
+  };
+
+  const handleExportImage = async () => {
+    if (!reportRef.current || !fibContent) return;
+    
+    setExportingImage(true);
+    // Brief delay to ensure any animations or rendering are finished
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    try {
+      const element = reportRef.current;
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        cacheBust: true,
+        style: {
+          transform: 'scale(1)',
+          margin: '0',
+          padding: '0',
+        },
+        filter: (node: HTMLElement) => {
+          const classList = node.classList;
+          return classList ? !classList.contains('print-hidden') : true;
+        }
+      });
+      
+      const link = document.createElement('a');
+      link.download = `KINEMA-FIB-${activeFilm?.title.replace(/\s+/g, '-')}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Image Export failed", err);
+    } finally {
+      setExportingImage(false);
+    }
   };
 
   const handleExportWord = async () => {
@@ -247,6 +286,31 @@ export default function FIBGenerator() {
 
               {/* Body Sections */}
               <div className="space-y-16 py-12">
+                 {/* 00 Strategy & USP */}
+                 {fibContent.usp && (
+                   <section className="space-y-4">
+                     <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter uppercase">Unique Selling Proposition</div>
+                     <div className="p-6 bg-zinc-900 text-white italic font-serif text-[18px]">
+                       "{fibContent.usp}"
+                     </div>
+                   </section>
+                 )}
+
+                 {/* 00 Dynamic Marketing Insights */}
+                 {fibContent.marketingMix && (
+                    <section className="space-y-6">
+                      <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter uppercase">Proposed Marketing Mix</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        {fibContent.marketingMix.map((mix, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 border border-zinc-100 bg-zinc-50 font-sans">
+                            <span className="font-bold text-[14px]">{mix.channel}</span>
+                            <span className="text-[14px] font-mono">{mix.allocation}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                 )}
+
                  {/* 01 Executive Summary */}
                  <section className="space-y-6">
                     <div className="border-y-4 border-black py-2 font-sans font-black text-[18px] tracking-tighter">01 — EXECUTIVE SUMMARY</div>
@@ -375,14 +439,24 @@ export default function FIBGenerator() {
            <div className="space-y-3 pt-6 border-t border-border-subtle">
               <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-2">EXPORT OPTIONS</div>
               
-              <button 
-                onClick={handleExportPDF}
-                disabled={!fibContent}
-                className="w-full py-3.5 bg-crimson text-white rounded-button font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-crimson-rich transition-all disabled:opacity-30 uppercase tracking-wide shadow-lg shadow-crimson/20"
-              >
-                <Printer className="w-4 h-4" />
-                Print / Save as PDF
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={handleExportPDF}
+                  disabled={!fibContent}
+                  className="py-3.5 bg-crimson text-white rounded-button font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-crimson-rich transition-all disabled:opacity-30 uppercase tracking-wide shadow-lg shadow-crimson/20"
+                >
+                  <Printer className="w-4 h-4" />
+                  PDF
+                </button>
+                <button 
+                  onClick={handleExportImage}
+                  disabled={!fibContent || exportingImage}
+                  className="py-3.5 bg-white/5 border border-border-strong text-ink-primary rounded-button font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-white/10 transition-all disabled:opacity-30 uppercase tracking-wide"
+                >
+                  {exportingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                  PNG
+                </button>
+              </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <button 

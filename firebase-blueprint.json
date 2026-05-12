@@ -96,6 +96,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["email", "role", "addedBy", "createdAt"]
+    },
+    "CineForge": {
+      "title": "Cine Forge",
+      "description": "AI-powered content repurposing strategies",
+      "type": "object",
+      "properties": {
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "results": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campaignId", "userId", "results", "createdAt"]
     }
   },
   "firestore": {
@@ -114,6 +126,10 @@
     "fib": {
       "schema": "FIB",
       "description": "Stored FIB results"
+    },
+    "cineforge": {
+      "schema": "CineForge",
+      "description": "Stored CineForge strategy results"
     },
     "clients": {
       "schema": "Client",

@@ -7,9 +7,9 @@ export default function DashboardLayout() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[220px] flex flex-col min-w-0">
+      <main className="flex-1 ml-[220px] print:ml-0 flex flex-col min-w-0">
         <Topbar />
-        <div className="flex-1 p-8 overflow-y-auto min-w-[1060px]">
+        <div className="flex-1 p-8 print:p-0 overflow-y-auto min-w-[1060px] print:min-w-0">
           <Outlet />
         </div>
       </main>
