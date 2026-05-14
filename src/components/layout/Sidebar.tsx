@@ -12,7 +12,8 @@ import {
   Library,
   LogOut,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useFilmContext } from '../../hooks/useFilmContext';
@@ -107,6 +108,7 @@ export default function Sidebar() {
           <div className="space-y-1">
             <NavItem to="/audience-dna" icon={Users} label="AudienceDNA™" />
             <NavItem to="/box-predict" icon={TrendingUp} label="BoxPredict™" />
+            <NavItem to="/visibility-tracker" icon={Globe} label="Visibility Tracker™" />
             <NavItem to="/live-ticker" icon={Activity} label="Live Ticker" />
           </div>
         </div>

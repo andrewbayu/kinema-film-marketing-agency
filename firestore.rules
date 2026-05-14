@@ -9,28 +9,14 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------
-    // Primitives
+    // Primitives & Helpers
     // -------------------------------------------------------------
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email_verified == true && (
@@ -41,130 +27,99 @@ service cloud.firestore {
       );
     }
 
-    function belongsToOwnCampaign(campaignId) {
+    function isCampaignOwner(campaignId) {
       return isAdmin() || (
-        isSignedIn() && (
-          campaignId == null || campaignId == "" || campaignId == "new" ||
-          !exists(/databases/$(database)/documents/campaigns/$(campaignId)) || 
-          get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid
-        )
+        isSignedIn() && 
+        exists(/databases/$(database)/documents/campaigns/$(campaignId)) &&
+        get(/databases/$(database)/documents/campaigns/$(campaignId)).data.userId == request.auth.uid
       );
     }
 
     // -------------------------------------------------------------
-    // Entities
+    // Validation Blueprints
     // -------------------------------------------------------------
     
-    // Team Management (Internal Admins)
+    function isValidCampaign(data) {
+      return (data.userId == request.auth.uid || isAdmin())
+          && data.title is string && data.title.size() <= 200
+          && data.createdAt is timestamp
+          && (data.lastVisibilityScan == null || data.lastVisibilityScan is timestamp)
+          && (data.releaseDate == null || (data.releaseDate is string && data.releaseDate.size() <= 64));
+    }
+
+    function isValidVisibility(data) {
+      return (data.userId == request.auth.uid || isAdmin())
+          && data.campaignId is string
+          && data.visibilityScore >= 0 && data.visibilityScore <= 100
+          && data.metrics is map
+          && data.sentiment is map
+          && data.createdAt is timestamp;
+    }
+
+    // -------------------------------------------------------------
+    // Match Blocks
+    // -------------------------------------------------------------
+    
     match /team/{email} {
-      function isValidTeamMember(data) {
-        return data.email == email && data.email.size() <= 100
-            && data.role in ['admin', 'super_admin']
-            && data.addedBy == request.auth.uid
-            && data.createdAt is timestamp;
-      }
       allow read: if isSignedIn();
-      allow create, update: if isAdmin() && isValidTeamMember(incoming()) && incoming().createdAt == request.time;
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    // Clients Authorization
     match /clients/{clientId} {
-      function isValidClient(data) {
-        return data.email is string && data.email.size() <= 100
-            && data.addedBy == request.auth.uid
-            && data.createdAt is timestamp;
-      }
       allow read: if isSignedIn() && (resource.data.email == request.auth.token.email || isAdmin());
-      allow create: if isAdmin() && isValidId(clientId) && isValidClient(incoming())
-                     && incoming().createdAt == request.time;
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    // Admins
     match /admins/{adminId} {
       allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
       allow write: if isAdmin();
     }
 
-    // Campaigns
     match /campaigns/{campaignId} {
-      function isValidCampaign(data) {
-        return (data.userId == request.auth.uid || isAdmin())
-            && data.title is string && data.title.size() <= 200
-            && data.createdAt is timestamp;
-      }
-
       allow read: if isOwner(existing().userId) || isAdmin();
-      allow create: if isSignedIn() && isValidId(campaignId) && isValidCampaign(incoming()) 
-                     && incoming().createdAt == request.time;
-      allow update: if (isOwner(existing().userId) || isAdmin()) && isValidCampaign(incoming())
-                     && (isAdmin() || (incoming().userId == existing().userId && incoming().createdAt == existing().createdAt));
+      allow create: if isSignedIn() && isValidCampaign(incoming()) && incoming().createdAt == request.time;
+      allow update: if (isOwner(existing().userId) || isAdmin()) && (
+        // Action: Generic Profile Update
+        (isValidCampaign(incoming()) && 
+         incoming().userId == existing().userId && 
+         incoming().createdAt == existing().createdAt &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'genre', 'budgetTier', 'releaseWindow', 'releaseDate', 'logline', 'leadCast', 'ipType', 'director', 'status'])) ||
+        // Action: Update Scan Timestamp (Allowed for system)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['lastVisibilityScan']) && incoming().lastVisibilityScan == request.time)
+      );
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
-    // Audience DNA
+    match /visibility_tracker/{scanId} {
+      allow read: if isOwner(existing().userId) || isAdmin();
+      allow create: if isSignedIn() && isValidVisibility(incoming())
+                     && isCampaignOwner(incoming().campaignId)
+                     && incoming().createdAt == request.time;
+      allow update: if false; 
+      allow delete: if isOwner(existing().userId) || isAdmin();
+    }
+
     match /audience_dna/{dnaId} {
-      function isValidDNA(data) {
-        return (data.userId == request.auth.uid || isAdmin())
-            && (data.campaignId is string || data.campaignId == null)
-            && (data.results is map || data.results is string)
-            && data.createdAt is timestamp;
-      }
-
       allow read: if isOwner(existing().userId) || isAdmin();
-      allow create: if isSignedIn() && isValidDNA(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId);
-      allow update: if false; 
+      allow create: if isSignedIn() && isCampaignOwner(incoming().campaignId);
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
-    // Box Predict
     match /box_predict/{predictId} {
-      function isValidPredict(data) {
-        return (data.userId == request.auth.uid || isAdmin())
-            && (data.campaignId is string || data.campaignId == null)
-            && (data.results is map || data.results is string)
-            && data.createdAt is timestamp;
-      }
-
       allow read: if isOwner(existing().userId) || isAdmin();
-      allow create: if isSignedIn() && isValidPredict(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId);
-      allow update: if false; 
+      allow create: if isSignedIn() && isCampaignOwner(incoming().campaignId);
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
-    // FIB
     match /fib/{fibId} {
-      function isValidFIB(data) {
-        return (data.userId == request.auth.uid || isAdmin())
-            && (data.campaignId is string || data.campaignId == null)
-            && (data.results is map || data.results is string)
-            && data.createdAt is timestamp;
-      }
-
       allow read: if isOwner(existing().userId) || isAdmin();
-      allow create: if isSignedIn() && isValidFIB(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId);
-      allow update: if false; 
+      allow create: if isSignedIn() && isCampaignOwner(incoming().campaignId);
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
 
-    // CineForge
     match /cineforge/{forgeId} {
-      function isValidForge(data) {
-        return (data.userId == request.auth.uid || isAdmin())
-            && (data.campaignId is string || data.campaignId == null)
-            && (data.results is map || data.results is string)
-            && (data.createdAt is timestamp || data.createdAt == null);
-      }
-
       allow read: if isOwner(existing().userId) || isAdmin();
-      allow create: if isSignedIn() && isValidForge(incoming())
-                     && belongsToOwnCampaign(incoming().campaignId)
-                     && incoming().createdAt == request.time;
-      allow update: if false; 
+      allow create: if isSignedIn() && isCampaignOwner(incoming().campaignId);
       allow delete: if isOwner(existing().userId) || isAdmin();
     }
   }

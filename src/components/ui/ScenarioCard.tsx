@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScenarioData } from '../../lib/types';
-import { cn, formatNumber } from '../../lib/utils';
+import { cn, formatNumber, formatCurrency } from '../../lib/utils';
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
 
 interface ScenarioCardProps {
@@ -29,7 +29,10 @@ export default function ScenarioCard({ type, data }: ScenarioCardProps) {
 
   const { color, icon: Icon, title } = config[type];
 
-  const formattedRevenue = `Rp ${(data.revenue).toLocaleString('id-ID', { maximumFractionDigits: 1 })} M`;
+  const formattedRevenue = formatCurrency(data.revenue);
+  const formattedAdmissions = data.admissions >= 1000000 
+    ? `${(data.admissions / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} JT`
+    : data.admissions.toLocaleString('id-ID');
 
   return (
     <div className={cn(
@@ -48,7 +51,7 @@ export default function ScenarioCard({ type, data }: ScenarioCardProps) {
       <div className="space-y-4">
         <div>
            <div className="text-[32px] font-extrabold text-ink-primary leading-tight">
-             {data.admissions.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M
+             {formattedAdmissions}
            </div>
            <div className="text-[10px] font-mono text-ink-tertiary uppercase font-bold tracking-wider">ADMISSIONS (EST)</div>
         </div>

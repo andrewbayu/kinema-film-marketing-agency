@@ -353,7 +353,11 @@ export default function FIBGenerator() {
                        {(Object.entries(boxPredictOutput.scenarios) as [string, any][]).map(([key, data]) => (
                          <div key={key} className="bg-white p-6 space-y-1">
                             <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">{data.label}</div>
-                            <div className="text-[28px] font-black tracking-tight">{data.admissions}M</div>
+                            <div className="text-[28px] font-black tracking-tight">
+                              {data.admissions >= 1000000 
+                                ? `${(data.admissions / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })}JT`
+                                : data.admissions.toLocaleString('id-ID')}
+                            </div>
                             <div className="text-[12px] font-bold italic opacity-60">Admissions (est)</div>
                          </div>
                        ))}

@@ -9,11 +9,12 @@ import {
   orderBy, 
   Timestamp,
   addDoc,
+  updateDoc,
   onSnapshot,
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { AudienceDNAResult, BoxPredictResult, FilmProfileInput, BoxPredictInput, CineForgeResult } from '../lib/types';
+import { AudienceDNAResult, BoxPredictResult, FilmProfileInput, BoxPredictInput, CineForgeResult, VisibilityTrackerResult } from '../lib/types';
 
 enum OperationType {
   CREATE = 'create',
@@ -69,6 +70,15 @@ export const dbService = {
       return docRef.id;
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async updateCampaign(campaignId: string, updates: Partial<FilmProfileInput>) {
+    const path = 'campaigns';
+    try {
+      await updateDoc(doc(db, path, campaignId), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   },
 
@@ -223,6 +233,71 @@ export const dbService = {
       return snapshot.docs[0].data().results as CineForgeResult;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, path);
+    }
+  },
+
+  // Visibility Tracker Methods
+  async saveVisibilityScan(campaignId: string, results: VisibilityTrackerResult) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) throw new Error("Auth required");
+
+    const path = 'visibility_tracker';
+    try {
+      // 1. Save scan result
+      await addDoc(collection(db, path), {
+        campaignId,
+        userId,
+        ...results,
+        createdAt: serverTimestamp() // Official firestore timestamp
+      });
+
+      // 2. Update campaign lastScan date (this is for rate limiting and status)
+      await updateDoc(doc(db, 'campaigns', campaignId), {
+        lastVisibilityScan: serverTimestamp()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async getLatestVisibilityScan(campaignId: string): Promise<VisibilityTrackerResult | null> {
+    const path = 'visibility_tracker';
+    try {
+      const q = query(
+        collection(db, path),
+        where('campaignId', '==', campaignId),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      
+      const data = snapshot.docs[0].data();
+      return {
+        ...data,
+        lastScanAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt
+      } as VisibilityTrackerResult;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return null;
+    }
+  },
+
+  async getVisibilityHistory(campaignId: string): Promise<VisibilityTrackerResult[]> {
+    const path = 'visibility_tracker';
+    try {
+      const q = query(
+        collection(db, path),
+        where('campaignId', '==', campaignId),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({
+        ...d.data(),
+        lastScanAt: d.data().createdAt instanceof Timestamp ? d.data().createdAt.toDate().toISOString() : d.data().createdAt
+      })) as VisibilityTrackerResult[];
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
     }
   }
 };

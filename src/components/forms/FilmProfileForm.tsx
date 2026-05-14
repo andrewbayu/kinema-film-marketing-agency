@@ -61,7 +61,8 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
         logline: initialData.logline || '',
         leadCast: initialData.leadCast || '',
         ipType: initialData.ipType || 'original',
-        director: initialData.director || ''
+        director: initialData.director || '',
+        releaseDate: initialData.releaseDate || ''
       });
     }
   }, [initialData, reset]);
@@ -129,6 +130,16 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
             placeholder="e.g., Reza Rahadian, Putri Marino"
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors placeholder:text-ink-tertiary/50"
           />
+        </div>
+
+        <div>
+           <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Release Date</label>
+           <input 
+            type="date"
+            {...register('releaseDate', { required: 'Release date is required' })}
+            className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors text-white"
+          />
+          {errors.releaseDate && <span className="text-[10px] text-crimson mt-1 ml-1">{errors.releaseDate.message}</span>}
         </div>
 
         <div>

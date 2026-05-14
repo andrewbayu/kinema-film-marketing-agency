@@ -17,6 +17,7 @@ export interface Film {
   budgetTier?: BudgetTier;
   releaseWindow?: string;
   ipType?: IPType;
+  releaseDate?: string;
 }
 
 export type BudgetTier = 'indie' | 'mid' | 'major';
@@ -47,6 +48,7 @@ export interface FilmProfileInput {
   ipType: IPType;
   director?: string;
   releaseWindow?: string; // Optional for legacy or AI to fill
+  releaseDate: string; // Required for new scans
 }
 
 export interface BoxPredictInput extends FilmProfileInput {
@@ -172,4 +174,54 @@ export interface LiveTickerData {
     trend: 'up' | 'stable' | 'down';
     alert: boolean;
   }>;
+}
+
+export interface VisibilityTrackerResult {
+  visibilityScore: number;
+  metrics: {
+    searchVolume: number; // Intent Index
+    socialBuzz: number;   // Enthusiasm Index
+    mediaHits: number;    // PR Momentum
+    shareOfVoice: number; // Competitive Index (0-100)
+  };
+  sentiment: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+  trends: string[];
+  lastScanAt: string;
+  topGeographies?: string[];
+  platformPerformance: Array<{
+    platform: string;
+    buzzLevel: number;
+    sentiment: 'Positive' | 'Neutral' | 'Negative';
+    topContent?: string; // Real link or post description
+  }>;
+  summary: string;
+  strategicAdvice: string;
+  benchmarkContext?: string;
+  trajectory?: {
+    daysToH7: number;
+    requiredDailyGrowth: number;
+    currentVelocity: number;
+    status: 'on-track' | 'at-risk' | 'critical';
+    targetPeakDate: string;
+  };
+  funnel?: {
+    p50Target: number;
+    requiredAwareness: number;
+    currentAwareness: number;
+    gapToP50: number;
+    conversionRates: {
+      awarenessToInterest: number;
+      interestToIntent: number;
+      intentToTicket: number;
+    };
+  };
+  evidencePoints?: Array<{
+    source: string;
+    dataPoint: string;
+    timestamp: string;
+  }>; // For transparency
 }

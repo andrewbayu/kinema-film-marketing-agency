@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import StatusBadge from '../components/ui/StatusBadge';
 import ProgressBar from '../components/ui/ProgressBar';
 import { cn } from '../lib/utils';
-import { Search, Plus, Loader2 } from 'lucide-react';
+import { Search, Plus, Loader2, Edit2 } from 'lucide-react';
 import NewCampaignModal from '../components/modals/NewCampaignModal';
+import EditCampaignModal from '../components/modals/EditCampaignModal';
 import { dbService } from '../services/dbService';
 import { FilmProfileInput } from '../lib/types';
 import { useFilmContext } from '../hooks/useFilmContext';
@@ -17,7 +18,10 @@ export default function Campaigns() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<FilterType>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,26 +47,26 @@ export default function Campaigns() {
       const id = await dbService.createCampaign(data);
       if (id) {
         setIsModalOpen(false);
-        // Map to the Film type used by UI
-        const newFilm = {
-          id,
-          title: data.title,
-          genre: data.genre,
-          client: 'Internal',
-          phase: 'Kickoff',
-          daysToRelease: 90,
-          reach: '0',
-          occupancy: null,
-          status: 'active' as const,
-          progress: 0
-        };
-        setActiveFilm(newFilm);
-        navigate('/audience-dna');
+        loadCampaigns();
       }
     } catch (error) {
       console.error("Failed to create campaign", error);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleUpdateCampaign = async (data: FilmProfileInput) => {
+    if (!selectedCampaign) return;
+    setIsUpdating(true);
+    try {
+      await dbService.updateCampaign(selectedCampaign.id, data);
+      setIsEditModalOpen(false);
+      loadCampaigns();
+    } catch (error) {
+      console.error("Failed to update campaign", error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -83,6 +87,7 @@ export default function Campaigns() {
       director: film.director,
       budgetTier: film.budgetTier,
       releaseWindow: film.releaseWindow,
+      releaseDate: film.releaseDate,
       ipType: film.ipType,
       client: film.client || 'Internal',
       phase: film.phase || 'Development',
@@ -94,6 +99,12 @@ export default function Campaigns() {
     };
     setActiveFilm(selectedFilm);
     navigate('/'); // Go to overview for this film
+  };
+
+  const handleEditClick = (e: React.MouseEvent, film: any) => {
+    e.stopPropagation();
+    setSelectedCampaign(film);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -169,9 +180,18 @@ export default function Campaigns() {
                     className="border-b border-border-subtle last:border-0 hover:bg-white/5 transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-5">
-                      <div>
-                        <div className="text-[14px] font-bold text-ink-primary group-hover:text-white transition-colors">{film.title}</div>
-                        <div className="text-[11px] text-ink-tertiary font-medium">{film.genre}</div>
+                      <div className="flex items-center gap-4">
+                        <div 
+                          onClick={(e) => handleEditClick(e, film)}
+                          className="p-2 opacity-0 group-hover:opacity-100 bg-black-2 border border-border-subtle rounded-md text-ink-tertiary hover:text-crimson hover:border-crimson/30 transition-all"
+                          title="Edit Campaign Profile"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-[14px] font-bold text-ink-primary group-hover:text-white transition-colors">{film.title}</div>
+                          <div className="text-[11px] text-ink-tertiary font-medium">{film.genre}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -181,6 +201,11 @@ export default function Campaigns() {
                       <span className="text-[13px] font-medium text-ink-secondary">
                         {film.createdAt?.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
+                      {film.releaseDate && (
+                        <div className="text-[10px] text-ink-tertiary mt-1">
+                          Release: <span className="text-white-tertiary font-bold">{film.releaseDate}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-5">
                       <div className="space-y-2">
@@ -210,6 +235,14 @@ export default function Campaigns() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleCreateCampaign}
           isLoading={isCreating}
+        />
+
+        <EditCampaignModal 
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdateCampaign}
+          isLoading={isUpdating}
+          initialData={selectedCampaign}
         />
     </div>
   );

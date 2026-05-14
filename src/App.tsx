@@ -18,6 +18,7 @@ import FIBGenerator from './pages/FIBGenerator';
 import CineForge from './pages/CineForge';
 import LandingPage from './pages/LandingPage';
 import Discussion from './pages/Discussion';
+import VisibilityTracker from './pages/VisibilityTracker';
 import AdminDashboard from './pages/AdminDashboard';
 import { LogIn } from 'lucide-react';
 
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="audience-dna" element={<AudienceDNA />} />
               <Route path="box-predict" element={<BoxPredict />} />
+              <Route path="visibility-tracker" element={<VisibilityTracker />} />
               <Route path="live-ticker" element={<LiveTicker />} />
               <Route path="cineforge" element={<CineForge />} />
               <Route path="library" element={<Library />} />

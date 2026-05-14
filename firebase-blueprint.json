@@ -9,12 +9,14 @@
         "genre": { "type": "string" },
         "budgetTier": { "type": "string" },
         "releaseWindow": { "type": "string" },
+        "releaseDate": { "type": "string" },
         "logline": { "type": "string" },
         "leadCast": { "type": "string" },
         "ipType": { "type": "string" },
         "director": { "type": "string" },
         "userId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
+        "lastVisibilityScan": { "type": "string", "format": "date-time" },
         "status": { "type": "string" }
       },
       "required": [
@@ -22,6 +24,67 @@
         "userId",
         "createdAt"
       ]
+    },
+    "VisibilityTracker": {
+      "title": "Visibility Tracker",
+      "description": "AI-powered real-time visibility monitoring",
+      "type": "object",
+      "properties": {
+        "campaignId": { "type": "string" },
+        "userId": { "type": "string" },
+        "visibilityScore": { "type": "number" },
+        "metrics": { 
+          "type": "object",
+          "properties": {
+            "searchVolume": { "type": "number" },
+            "socialBuzz": { "type": "number" },
+            "mediaHits": { "type": "number" },
+            "shareOfVoice": { "type": "number" }
+          }
+        },
+        "sentiment": { 
+          "type": "object",
+          "properties": {
+            "positive": { "type": "number" },
+            "neutral": { "type": "number" },
+            "negative": { "type": "number" }
+          }
+        },
+        "trends": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "platformPerformance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": { "type": "string" },
+              "buzzLevel": { "type": "number" },
+              "sentiment": { "type": "string" },
+              "topContent": { "type": "string" }
+            }
+          }
+        },
+        "summary": { "type": "string" },
+        "strategicAdvice": { "type": "string" },
+        "benchmarkContext": { "type": "string" },
+        "trajectory": { "type": "object" },
+        "funnel": { "type": "object" },
+        "evidencePoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string" },
+              "dataPoint": { "type": "string" },
+              "timestamp": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campaignId", "userId", "visibilityScore", "metrics", "sentiment", "createdAt"]
     },
     "AudienceDNA": {
       "title": "Audience DNA",
@@ -138,6 +201,10 @@
     "team": {
       "schema": "TeamMember",
       "description": "List of authorized internal team emails"
+    },
+    "visibility_tracker": {
+      "schema": "VisibilityTracker",
+      "description": "Real-time visibility scan history"
     }
   }
 }
