@@ -91,9 +91,13 @@ export const dbService = {
     }
   },
 
-  async getCampaigns() {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return [];
+  async getCampaigns(uid?: string) {
+    const userId = uid || auth.currentUser?.uid;
+    console.log("Fetching campaigns for user:", userId);
+    if (!userId) {
+      console.warn("No userId provided, returning empty list");
+      return [];
+    }
 
     const path = 'campaigns';
     try {
@@ -103,8 +107,10 @@ export const dbService = {
         orderBy('createdAt', 'desc')
       );
       const snapshot = await getDocs(q);
+      console.log(`Found ${snapshot.size} campaigns for user ${userId}`);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Film));
     } catch (error) {
+      console.error("Firestore getCampaigns error:", error);
       handleFirestoreError(error, OperationType.LIST, path);
       return [];
     }

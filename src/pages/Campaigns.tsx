@@ -6,6 +6,7 @@ import { Search, Plus, Loader2, Edit2 } from 'lucide-react';
 import NewCampaignModal from '../components/modals/NewCampaignModal';
 import EditCampaignModal from '../components/modals/EditCampaignModal';
 import { dbService } from '../services/dbService';
+import { auth } from '../lib/firebase';
 import { FilmProfileInput } from '../lib/types';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { useNavigate } from 'react-router-dom';
@@ -26,13 +27,21 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadCampaigns();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadCampaigns(user.uid);
+      } else {
+        setCampaigns([]);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const loadCampaigns = async () => {
+  const loadCampaigns = async (uid?: string) => {
     setLoading(true);
     try {
-      const data = await dbService.getCampaigns();
+      const data = await dbService.getCampaigns(uid);
       setCampaigns(data || []);
     } catch (error) {
       console.error("Failed to load campaigns", error);

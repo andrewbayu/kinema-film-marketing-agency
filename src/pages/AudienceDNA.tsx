@@ -11,6 +11,8 @@ import { dbService } from '../services/dbService';
 import { toPng } from 'html-to-image';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
+import { firecrawlService } from '../services/firecrawlService';
+
 export default function AudienceDNA() {
   const navigate = useNavigate();
   const { audienceDNAOutput, setAudienceDNAOutput, activeFilm } = useFilmContext();
@@ -24,7 +26,7 @@ export default function AudienceDNA() {
     if (activeFilm?.id && !audienceDNAOutput) {
       loadLatestDNA();
     }
-  }, [activeFilm?.id]);
+  }, [activeFilm?.id, audienceDNAOutput, setAudienceDNAOutput]);
 
   const loadLatestDNA = async () => {
     if (!activeFilm) return;
@@ -62,7 +64,7 @@ export default function AudienceDNA() {
         },
         // Filtering out any problematic nodes if necessary
         filter: (node: HTMLElement) => {
-          const classList = node.classList;
+          const classList = (node as HTMLElement).classList;
           return classList ? !classList.contains('print-hidden') : true;
         }
       });
@@ -82,7 +84,17 @@ export default function AudienceDNA() {
     setLoading(true);
     setError(null);
     try {
-      const result = await runAudienceDNA(data);
+      // 1. Firecrawl Research for Local Trends
+      let context = "";
+      try {
+        const trendQuery = `tren penonton film genre ${data.genre} di Indonesia 2025 perilaku digital`;
+        context = await firecrawlService.searchAndScrape(trendQuery, 3);
+      } catch (err) {
+        console.warn("Firecrawl research failed", err);
+      }
+
+      // 2. Run Gemini with context
+      const result = await runAudienceDNA(data, context);
       setAudienceDNAOutput(result);
       
       // Save to Firestore if we have an active film

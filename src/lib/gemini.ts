@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import { 
   FilmProfileInput, 
   AudienceDNAResult, 
@@ -11,46 +10,34 @@ import {
 } from './types';
 import { KINEMA_SYSTEM_PROMPT, CINEFORGE_PROMPT } from './prompts';
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || ''
-});
+import { apiClient } from '../services/apiClient';
 
-// Helper for checking API Key
-if (!process.env.GEMINI_API_KEY) {
-  console.warn("WARNING: GEMINI_API_KEY is not defined. Please add it to Secrets in AI Studio.");
-}
+// Helper for checking API Key - handled server side now
+const skipClientCheck = true;
 
 async function generateWithRetry(prompt: string, config: any, retries = 3): Promise<any> {
+  const skip = skipClientCheck; // prevent unused var
   let lastError: any;
   for (let i = 0; i < retries; i++) {
     try {
-      // @ts-ignore
-      return await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-          ...config,
-          // Increase timeout budget slightly for tool calls if the environment allows or model respects it
-        }
-      });
+      return await apiClient.post('/api/gemini/generate', { prompt, config });
     } catch (err: any) {
       lastError = err;
       const errorMsg = err.message || '';
       const isTransient = errorMsg.includes('500') || errorMsg.includes('503') || errorMsg.includes('Deadline') || errorMsg.includes('UNAVAILABLE');
       
-      if (!isTransient) throw err;
+      if (!isTransient || i === retries - 1) throw err;
       
       console.warn(`Gemini API transient error (attempt ${i + 1}/${retries}). Retrying...`, err);
-      if (i < retries - 1) {
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 2000));
-      }
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 2000));
     }
   }
   throw lastError;
 }
 
-export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceDNAResult> {
+export async function runAudienceDNA(input: FilmProfileInput, context?: string): Promise<AudienceDNAResult> {
+  const contextBlock = context ? `\nDATA KONTEKSTUAL (Crawled from Web):\n${context}\n` : '';
   const prompt = `
     ${KINEMA_SYSTEM_PROMPT}
 
@@ -63,6 +50,7 @@ export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceD
     BUDGET TIER: ${input.budgetTier}
     IP TYPE: ${input.ipType}
     ${input.director ? `SUTRADARA: ${input.director}` : ''}
+    ${contextBlock}
 
     Tugasmu:
     1. Identifikasi 3-4 segmen penonton Indonesia yang paling relevan.
@@ -121,8 +109,10 @@ export async function runAudienceDNA(input: FilmProfileInput): Promise<AudienceD
 export async function runBoxPredict(
   filmInput: FilmProfileInput,
   boxInput: BoxPredictInput,
-  audienceResult: AudienceDNAResult
+  audienceResult: AudienceDNAResult,
+  context?: string
 ): Promise<BoxPredictResult> {
+  const contextBlock = context ? `\nDATA KONTEKSTUAL (Crawled from Web):\n${context}\n` : '';
   const prompt = `
     ${KINEMA_SYSTEM_PROMPT}
 
@@ -132,6 +122,7 @@ export async function runBoxPredict(
     GENRE: ${boxInput.genre}
     RELEASE DATE: ${boxInput.releaseDate}
     AUDIENCE: ${audienceResult.primarySegment}
+    ${contextBlock}
 
     INSTRUKSI KHUSUS ANALISIS MARKET:
     1. CARI TAHU konteks tanggal ${boxInput.releaseDate} di Indonesia. Apakah itu hari biasa? Lebaran? Libur sekolah? Long weekend?
@@ -278,16 +269,15 @@ export async function generateCineForgeContent(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
+    const response = await generateWithRetry(
+      prompt,
+      {
         responseMimeType: 'application/json',
         tools: useLiveTrends ? [{ googleSearch: {} }] : [],
         // Required when using tools with Gemini 3
         toolConfig: useLiveTrends ? { includeServerSideToolInvocations: true } : undefined
       }
-    });
+    );
     
     const text = response.text || '';
     return JSON.parse(text) as CineForgeResult;
@@ -299,9 +289,11 @@ export async function generateCineForgeContent(
 
 export async function performVisibilityScan(
   filmInput: FilmProfileInput,
-  boxPredictResult?: BoxPredictResult
+  boxPredictResult?: BoxPredictResult,
+  context?: string
 ): Promise<VisibilityTrackerResult> {
   const currentDate = new Date().toISOString();
+  const contextBlock = context ? `\nDATA KONTEKSTUAL TERBARU (Firecrawl Deep Scan):\n${context}\n` : '';
   
   const benchmarkConstraint = boxPredictResult 
     ? `PENTING: Kamu WAJIB menggunakan angka P50 Admissions berikut sebagai target benchmark: ${boxPredictResult.scenarios.base.admissions}. Jangan menghitung angka baru.`
@@ -318,6 +310,7 @@ export async function performVisibilityScan(
     TODAY'S DATE: ${currentDate}
 
     ${benchmarkConstraint}
+    ${contextBlock}
 
     Tugasmu adalah melakukan pemantauan rill (gunakan Google Search Grounding) untuk mendeteksi data VALID:
     1. Search Volume index (0-100) - Ambil dari data Google Trends Indonesia terbaru.
@@ -390,15 +383,14 @@ export async function performVisibilityScan(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
+    const response = await generateWithRetry(
+      prompt,
+      {
         responseMimeType: 'application/json',
         tools: [{ googleSearch: {} }],
         toolConfig: { includeServerSideToolInvocations: true }
       }
-    });
+    );
     
     const text = response.text || '';
     return JSON.parse(text) as VisibilityTrackerResult;

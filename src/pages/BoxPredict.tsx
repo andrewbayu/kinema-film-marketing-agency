@@ -13,6 +13,8 @@ import { dbService } from '../services/dbService';
 import { toPng } from 'html-to-image';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
+import { firecrawlService } from '../services/firecrawlService';
+
 export default function BoxPredict() {
   const navigate = useNavigate();
   const { audienceDNAOutput, boxPredictOutput, setBoxPredictOutput, activeFilm } = useFilmContext();
@@ -26,7 +28,7 @@ export default function BoxPredict() {
     if (activeFilm?.id && !boxPredictOutput) {
       loadLatestPredict();
     }
-  }, [activeFilm?.id]);
+  }, [activeFilm?.id, boxPredictOutput, setBoxPredictOutput]);
 
   const loadLatestPredict = async () => {
     if (!activeFilm) return;
@@ -63,7 +65,7 @@ export default function BoxPredict() {
           padding: '0',
         },
         filter: (node: HTMLElement) => {
-          const classList = node.classList;
+          const classList = (node as HTMLElement).classList;
           return classList ? !classList.contains('print-hidden') : true;
         }
       });
@@ -85,7 +87,16 @@ export default function BoxPredict() {
     setLoading(true);
     setError(null);
     try {
-      // Competitors string to array
+      // 1. Firecrawl Deep Research for Market Context
+      let context = "";
+      try {
+        const marketQuery = `persaingan box office film indonesia ${data.releaseDate} kompetitor bioskop`;
+        context = await firecrawlService.searchAndScrape(marketQuery, 4);
+      } catch (err) {
+        console.warn("Firecrawl market research failed", err);
+      }
+
+      // 2. Competitors string to array
       const formattedData = {
         ...data,
         competitors: typeof data.competitors === 'string' ? (data.competitors as string).split(',').map(s => s.trim()) : data.competitors
@@ -104,7 +115,8 @@ export default function BoxPredict() {
           releaseDate: data.releaseDate
         },
         formattedData,
-        audienceDNAOutput
+        audienceDNAOutput,
+        context
       );
       setBoxPredictOutput(result);
 

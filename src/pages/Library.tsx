@@ -19,6 +19,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 
+import { auth } from '../lib/firebase';
+
 export default function Library() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
@@ -28,38 +30,47 @@ export default function Library() {
   const [reportsMap, setReportsMap] = useState<Record<string, { dna: boolean, box: boolean, fib: boolean }>>({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await dbService.getCampaigns();
-        setCampaigns(data || []);
-        
-        // Check for reports for each campaign
-        const statusMap: Record<string, { dna: boolean, box: boolean, fib: boolean }> = {};
-        
-        if (data) {
-          await Promise.all(data.map(async (c: any) => {
-            const [dna, box, fib] = await Promise.all([
-              dbService.getLatestAudienceDNA(c.id),
-              dbService.getLatestBoxPredict(c.id),
-              dbService.getLatestFIB(c.id)
-            ]);
-            statusMap[c.id] = {
-              dna: !!dna,
-              box: !!box,
-              fib: !!fib
-            };
-          }));
-        }
-        setReportsMap(statusMap);
-      } catch (err) {
-        console.error("Library fetch failed", err);
-      } finally {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchData(user.uid);
+      } else {
+        setCampaigns([]);
         setLoading(false);
       }
-    };
-    fetchData();
+    });
+    return () => unsubscribe();
   }, []);
+
+  const fetchData = async (uid?: string) => {
+    setLoading(true);
+    try {
+      const data = await dbService.getCampaigns(uid);
+      setCampaigns(data || []);
+      
+      // Check for reports for each campaign
+      const statusMap: Record<string, { dna: boolean, box: boolean, fib: boolean }> = {};
+      
+      if (data && data.length > 0) {
+        await Promise.all(data.map(async (c: any) => {
+          const [dna, box, fib] = await Promise.all([
+            dbService.getLatestAudienceDNA(c.id),
+            dbService.getLatestBoxPredict(c.id),
+            dbService.getLatestFIB(c.id)
+          ]);
+          statusMap[c.id] = {
+            dna: !!dna,
+            box: !!box,
+            fib: !!fib
+          };
+        }));
+      }
+      setReportsMap(statusMap);
+    } catch (err) {
+      console.error("Library fetch failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNavigateToReport = (film: Film, route: string) => {
     setActiveFilm(film);

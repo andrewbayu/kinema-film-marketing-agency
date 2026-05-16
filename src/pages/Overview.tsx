@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dbService } from '../services/dbService';
+import { auth } from '../lib/firebase';
 import { useFilmContext } from '../hooks/useFilmContext';
 
 export default function Overview() {
@@ -16,13 +17,21 @@ export default function Overview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadData(user.uid);
+      } else {
+        setCampaigns([]);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (uid?: string) => {
     setLoading(true);
     try {
-      const data = await dbService.getCampaigns();
+      const data = await dbService.getCampaigns(uid);
       setCampaigns(data || []);
     } catch (error) {
       console.error("Error loading overview data", error);

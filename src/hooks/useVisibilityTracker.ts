@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { VisibilityTrackerResult, Film } from '../lib/types';
 import { dbService } from '../services/dbService';
 import { performVisibilityScan } from '../lib/gemini';
+import { firecrawlService } from '../services/firecrawlService';
 
 export function useVisibilityTracker(activeFilm: Film | null) {
   const [loading, setLoading] = useState(false);
@@ -63,8 +64,21 @@ export function useVisibilityTracker(activeFilm: Film | null) {
       else setLoading(true);
       
       setError(null);
+      
+      // 1. Firecrawl Deep Research (Gather contextual data)
+      let crawlContext = "";
+      try {
+        const searchQuery = `performa film "${activeFilm.title}" buzz media sosial indonesia tiktok instagram 2025`;
+        crawlContext = await firecrawlService.searchAndScrape(searchQuery, 4);
+      } catch (err) {
+        console.warn("Firecrawl search failed, proceeding with standard scan", err);
+      }
+
+      // 2. Box Base benchmark
       const benchmark = await dbService.getLatestBoxPredict(activeFilm.id);
-      const result = await performVisibilityScan(activeFilm as any, benchmark || undefined);
+      
+      // 3. Perform Gemini Scan with context + search grounding
+      const result = await performVisibilityScan(activeFilm as any, benchmark || undefined, crawlContext);
       await dbService.saveVisibilityScan(activeFilm.id, result);
       
       setLatestScan(result);
