@@ -25,6 +25,7 @@ import { dbService } from '../services/dbService';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export default function FIBGenerator() {
@@ -36,6 +37,7 @@ export default function FIBGenerator() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportingImage, setExportingImage] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   const [status, setStatus] = useState<'Draft' | 'Final'>('Draft');
   const [error, setError] = useState<string | null>(null);
   const reportRef = useRef<HTMLElement>(null);
@@ -93,8 +95,56 @@ export default function FIBGenerator() {
     }
   };
 
-  const handleExportPDF = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    if (!reportRef.current || !fibContent) return;
+
+    setExportingPDF(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    try {
+      const element = reportRef.current;
+      const dataUrl = await toPng(element, {
+        quality: 1,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        cacheBust: true,
+        filter: (node: HTMLElement) => {
+          const classList = node.classList;
+          return classList ? !classList.contains('print-hidden') : true;
+        }
+      });
+
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load captured image'));
+      });
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (img.height * pageWidth) / img.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(dataUrl, 'PNG', 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'PNG', 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`KINEMA-FIB-${activeFilm?.title.replace(/\s+/g, '-')}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   const handleExportImage = async () => {
@@ -451,12 +501,12 @@ export default function FIBGenerator() {
               <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest mb-2">EXPORT OPTIONS</div>
               
               <div className="grid grid-cols-2 gap-2">
-                <button 
+                <button
                   onClick={handleExportPDF}
-                  disabled={!fibContent}
+                  disabled={!fibContent || exportingPDF}
                   className="py-3.5 bg-crimson text-white rounded-button font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-crimson-rich transition-all disabled:opacity-30 uppercase tracking-wide shadow-lg shadow-crimson/20"
                 >
-                  <Printer className="w-4 h-4" />
+                  {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
                   PDF
                 </button>
                 <button 
@@ -490,7 +540,7 @@ export default function FIBGenerator() {
 
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/5 border border-blue-500/10 rounded text-blue-400 text-[10px] font-medium italic">
                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                 <span>PDF uses browser print. Tip: Upload Word to Google Docs for editing.</span>
+                 <span>PDF/PNG capture the rendered document. Tip: Upload Word to Google Docs for editing.</span>
               </div>
            </div>
         </div>
