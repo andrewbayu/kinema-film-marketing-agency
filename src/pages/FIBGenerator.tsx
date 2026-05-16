@@ -10,11 +10,10 @@ import {
   AlertCircle, 
   FileType, 
   BrainCircuit, 
-  RefreshCw, 
-  History, 
+  RefreshCw,
+  History,
   Loader2,
   FileDown,
-  ExternalLink,
   Printer,
   ImageIcon
 } from 'lucide-react';
@@ -328,8 +327,12 @@ export default function FIBGenerator() {
                     <div className="font-bold">{activeFilm?.genre}</div>
                  </div>
                  <div className="space-y-1">
-                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">RELEASE WINDOW</div>
-                    <div className="font-bold uppercase">{boxPredictOutput.releaseWindowRecommendation.split(' ')[0]}</div>
+                    <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">RELEASE DATE</div>
+                    <div className="font-bold uppercase">
+                      {activeFilm?.releaseDate
+                        ? new Date(activeFilm.releaseDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : 'TBD'}
+                    </div>
                  </div>
                  <div className="space-y-1">
                     <div className="text-zinc-400 font-bold uppercase tracking-wider text-[10px]">CREATED DATE</div>
@@ -519,24 +522,14 @@ export default function FIBGenerator() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={handleExportWord}
-                  disabled={!fibContent || exporting}
-                  className="py-3 bg-black-6 border border-border-strong text-ink-primary rounded-button font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-white/5 transition-all disabled:opacity-30 uppercase"
-                >
-                  {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                  Word
-                </button>
-                <button 
-                  onClick={() => window.open('https://docs.google.com/document/u/0/?show_intro=1', '_blank')}
-                  disabled={!fibContent}
-                  className="py-3 bg-black-6 border border-border-strong text-ink-primary rounded-button font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-white/5 transition-all disabled:opacity-30 uppercase"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  GDocs
-                </button>
-              </div>
+              <button
+                onClick={handleExportWord}
+                disabled={!fibContent || exporting}
+                className="w-full py-3 bg-black-6 border border-border-strong text-ink-primary rounded-button font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-white/5 transition-all disabled:opacity-30 uppercase"
+              >
+                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                Word
+              </button>
 
               <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/5 border border-blue-500/10 rounded text-blue-400 text-[10px] font-medium italic">
                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
