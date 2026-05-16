@@ -93,7 +93,7 @@ app.post("/api/gemini/generate", async (req, res) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
     
     const { tools, toolConfig, ...generationSettings } = config || {};
     
