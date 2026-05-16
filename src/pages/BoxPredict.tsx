@@ -99,6 +99,9 @@ export default function BoxPredict() {
           logline: data.logline,
           leadCast: data.leadCast,
           ipType: data.ipType,
+          director: data.director,
+          releaseWindow: data.releaseWindow,
+          releaseDate: data.releaseDate
         },
         formattedData,
         audienceDNAOutput

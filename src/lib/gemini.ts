@@ -319,25 +319,28 @@ export async function performVisibilityScan(
 
     ${benchmarkConstraint}
 
-    Tugasmu adalah melakukan simulasi scraping mendalam (gunakan Google Search Grounding) untuk mendeteksi data REAL:
-    1. Search Volume index (0-100) - Gunakan data Google Trends Indonesia terbaru.
-    2. Social Media Buzz (TikTok, Instagram, X) - Cari view counts hashtag, viralitas post, dan volume diskusi di Indonesia.
-    3. Media Hits - Cari jumlah artikel di portal berita hiburan (Detik, Kompas, KapanLagi, dll).
-    4. Share of Voice (SOV) - Bandingkan volume diskusi film ini vs film pesaing yang tayang di periode yang sama.
-    5. Sentimen publik saat ini berdasarkan komentar netizen terbaru.
+    Tugasmu adalah melakukan pemantauan rill (gunakan Google Search Grounding) untuk mendeteksi data VALID:
+    1. Search Volume index (0-100) - Ambil dari data Google Trends Indonesia terbaru.
+    2. Social Media Buzz (TikTok, Instagram, X) - Cari data views, likes, dan shares rill jika tersedia. Jika tidak ada, berikan estimasi volume diskusi yang jujur.
+    3. Media Hits - Hitung artikel berita rill dari portal hiburan Indonesia.
+    4. Share of Voice (SOV) - Bandingkan volume diskusi film ini secara objektif vs kompetitor.
+    5. Sentimen publik rill berdasarkan percakapan terbaru di media sosial.
     6. TRAJECTORY H-7: 
-       - Hitung "daysToH7" secara presisi: (Tanggal Rilis - 7 Hari) minus (Tanggal Hari Ini).
-       - Jika hasil <= 0, berarti sudah masuk periode peak.
-       - Tentukan status 'at-risk' jika current awareness < 60% dari target P50 padahal sudah H-14.
+       - Hitung "daysToH7" secara presisi.
+       - Tentukan status 'at-risk' berdasarkan perbandingan pencapaian awareness vs target benchmark.
+       - "currentVelocity": Berikan estimasi pertumbuhan awareness harian dalam persentase (0-100%). PENTING: Jika terjadi lonjakan besar, jangan berikan angka ribuan persen. Gunakan angka yang menggambarkan "momentum" (contoh: +15% per hari sudah sangat kuat).
     7. Reverse Admission Funnel (Scenario P50):
-       - Target P50: Gunakan angka yang ditetapkan di atas (benchmarkConstraint).
-       - Required Awareness: Reach/Impression target (biasanya 15-20x target admissions).
-       - Current Awareness: Estimasi reach rill saat ini berdasarkan buzz yang ditemukan.
-       - Conversion Rates: Estimasi conversion rill di pasar Indonesia saat ini.
-       - Gap to P50: Hitung dalam PERSENTASE (0-100%) seberapa jauh "Current Awareness" dari "Required Awareness".
+       - Target P50: Gunakan angka yang ditetapkan di atas.
+       - Required Awareness: Reach target (15-20x target admissions).
+       - Current Awareness: Estimasi reach rill saat ini berdasarkan data buzz yang ditemukan.
+       - Gap to P50: Hitung dalam PERSENTASE seberapa jauh "Current Awareness" dari "Required Awareness".
     
-    PENTING: Sertakan "evidencePoints" berupa poin-poin data spesifik yang kamu temukan (misal: "Hashtag #JudulFilm tembus 2M views di TikTok", "Terdeteksi 15 artikel berita dalam 24 jam terakhir").
-    SEMUA ANGKA (admissions, awareness) harus berupa INTEGER murni tanpa huruf M/K.
+    PENTING: 
+    - JANGAN mengarang angka (hallucination). Jika kamu tidak menemukan angka eksak, jangan gunakan angka spesifik seperti "125,000 shares". Lebih baik gunakan angka pembulatan yang realistis atau deskripsi jangkauan (e.g. "Low coverage", "Rising buzz").
+    - REACH ADALAH KUMULATIF: "currentAwareness" tidak boleh turun drastis dibanding "Required Awareness" secara tidak logis.
+    - "currentVelocity" WAJIB masuk akal (biasanya 0.1% - 30% per hari). Jangan pernah memberikan angka ribuan persen.
+    - "evidencePoints" WAJIB berisi temuan rill. Sertakan kutipan judul berita atau deskripsi konten spesifik yang kamu temukan di pencarian.
+    - Semua angka harus berupa INTEGER murni.
 
     Format JSON:
     {

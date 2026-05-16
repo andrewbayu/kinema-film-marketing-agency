@@ -1,6 +1,8 @@
 {
-  "name": "Kinema Film Marketing Agency",
-  "description": "Kinema is fullstack AI-native marketing agency build for cinemaverse.",
+  "name": "Kinema Intelligence Portal",
+  "description": "Indonesian cinema marketing intelligence platform featuring audience DNA, box office prediction, and real-time visibility tracking.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

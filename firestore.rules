@@ -49,10 +49,12 @@ service cloud.firestore {
 
     function isValidVisibility(data) {
       return (data.userId == request.auth.uid || isAdmin())
-          && data.campaignId is string
-          && data.visibilityScore >= 0 && data.visibilityScore <= 100
+          && data.campaignId is string && data.campaignId.size() <= 128
+          && data.visibilityScore is number
           && data.metrics is map
           && data.sentiment is map
+          && (data.trajectory == null || data.trajectory is map)
+          && (data.funnel == null || data.funnel is map)
           && data.createdAt is timestamp;
     }
 
@@ -76,27 +78,27 @@ service cloud.firestore {
     }
 
     match /campaigns/{campaignId} {
-      allow read: if isOwner(existing().userId) || isAdmin();
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
       allow create: if isSignedIn() && isValidCampaign(incoming()) && incoming().createdAt == request.time;
-      allow update: if (isOwner(existing().userId) || isAdmin()) && (
+      allow update: if (isOwner(resource.data.userId) || isAdmin()) && (
         // Action: Generic Profile Update
         (isValidCampaign(incoming()) && 
-         incoming().userId == existing().userId && 
-         incoming().createdAt == existing().createdAt &&
-         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'genre', 'budgetTier', 'releaseWindow', 'releaseDate', 'logline', 'leadCast', 'ipType', 'director', 'status'])) ||
-        // Action: Update Scan Timestamp (Allowed for system)
-        (incoming().diff(existing()).affectedKeys().hasOnly(['lastVisibilityScan']) && incoming().lastVisibilityScan == request.time)
+         incoming().userId == resource.data.userId && 
+         incoming().createdAt == resource.data.createdAt &&
+         incoming().diff(resource.data).affectedKeys().hasOnly(['title', 'genre', 'budgetTier', 'releaseWindow', 'releaseDate', 'logline', 'leadCast', 'ipType', 'director', 'status'])) ||
+        // Action: Update Scan Timestamp
+        (incoming().diff(resource.data).affectedKeys().hasOnly(['lastVisibilityScan']) && incoming().lastVisibilityScan == request.time)
       );
-      allow delete: if isOwner(existing().userId) || isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
     match /visibility_tracker/{scanId} {
-      allow read: if isOwner(existing().userId) || isAdmin();
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && isValidVisibility(incoming())
                      && isCampaignOwner(incoming().campaignId)
-                     && incoming().createdAt == request.time;
+                     && (incoming().createdAt == request.time || (isAdmin() && incoming().createdAt <= request.time));
       allow update: if false; 
-      allow delete: if isOwner(existing().userId) || isAdmin();
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     match /audience_dna/{dnaId} {

@@ -3,6 +3,8 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signInWithGoogle, db } from '../lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
+import { SUPER_ADMIN_EMAIL } from '../constants';
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -26,8 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (user) {
         // Check if Admin
-        const superAdminEmail = 'andrew.bayu23@gmail.com';
-        if (user.email === superAdminEmail) {
+        if (user.email === SUPER_ADMIN_EMAIL) {
           setIsAdmin(true);
           setIsAuthorized(true);
         } else {

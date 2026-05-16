@@ -73,7 +73,8 @@ export default function FIBGenerator() {
           logline: activeFilm.logline || '',
           leadCast: activeFilm.leadCast || '',
           ipType: activeFilm.ipType || 'original',
-          director: activeFilm.director
+          director: activeFilm.director,
+          releaseDate: activeFilm.releaseDate || ''
         },
         audienceDNAOutput,
         boxPredictOutput

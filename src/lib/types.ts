@@ -134,6 +134,20 @@ export interface FIBContent {
   usp?: string;
 }
 
+export interface FIBResult {
+  campaignId: string;
+  userId: string;
+  results: FIBContent;
+  createdAt: any; // Firestore Timestamp
+}
+
+export interface BoxOfficeHistory {
+  date: string;
+  admissions: number;
+  theaters: number;
+  revenue: number;
+}
+
 export interface CineForgeContent {
   id: string;
   title: string;
