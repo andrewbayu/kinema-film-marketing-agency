@@ -277,7 +277,6 @@ export const dbService = {
             conversionRates: {
               awarenessToInterest: 12,
               interestToIntent: 8,
-              interestToIntent: 8,
               intentToTicket: 5
             }
           },

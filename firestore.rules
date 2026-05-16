@@ -51,13 +51,14 @@ service cloud.firestore {
       return (data.userId == request.auth.uid || isAdmin())
           && data.campaignId is string && data.campaignId.size() <= 128
           && data.visibilityScore is number
-          && data.metrics is map
           && data.sentiment is map
+          && (data.metrics == null || data.metrics is map)
           && (data.trajectory == null || data.trajectory is map)
           && (data.funnel == null || data.funnel is map)
           && (data.platformPerformance == null || data.platformPerformance is list)
           && (data.evidencePoints == null || data.evidencePoints is list)
           && (data.trends == null || data.trends is list)
+          && (data.topGeographies == null || data.topGeographies is list)
           && (data.summary == null || data.summary is string)
           && (data.strategicAdvice == null || data.strategicAdvice is string)
           && (data.benchmarkContext == null || data.benchmarkContext is string)
@@ -100,8 +101,9 @@ service cloud.firestore {
 
     match /visibility_tracker/{scanId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidVisibility(incoming())
-                     && isCampaignOwner(incoming().campaignId)
+      allow create: if isSignedIn() 
+                     && isValidVisibility(incoming())
+                     && (isAdmin() || isCampaignOwner(incoming().campaignId))
                      && (incoming().createdAt == request.time || (isAdmin() && incoming().createdAt <= request.time));
       allow update: if false; 
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
