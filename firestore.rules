@@ -55,6 +55,12 @@ service cloud.firestore {
           && data.sentiment is map
           && (data.trajectory == null || data.trajectory is map)
           && (data.funnel == null || data.funnel is map)
+          && (data.platformPerformance == null || data.platformPerformance is list)
+          && (data.evidencePoints == null || data.evidencePoints is list)
+          && (data.trends == null || data.trends is list)
+          && (data.summary == null || data.summary is string)
+          && (data.strategicAdvice == null || data.strategicAdvice is string)
+          && (data.benchmarkContext == null || data.benchmarkContext is string)
           && data.createdAt is timestamp;
     }
 

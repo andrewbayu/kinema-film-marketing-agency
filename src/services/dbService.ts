@@ -163,11 +163,18 @@ export const dbService = {
 
     const path = 'visibility_tracker';
     try {
-      // 1. Save scan result (Note: this one doesn't wrap results in a 'results' field for legacy reasons/original design)
+      // Create a copy to avoid mutating the original
+      const dataToSave = { ...results };
+      // Remove lastScanAt if it's there to avoid double-dipping with createdAt
+      if ('lastScanAt' in dataToSave) {
+        delete (dataToSave as any).lastScanAt;
+      }
+
+      // 1. Save scan result
       await addDoc(collection(db, path), {
+        ...dataToSave,
         campaignId,
         userId,
-        ...results,
         createdAt: serverTimestamp()
       });
 
@@ -248,7 +255,6 @@ export const dbService = {
           },
           sentiment: { positive: 60 + i, neutral: 30 - i, negative: 10 },
           trends: ['Viral Trailer', 'Football Enthusiasm'],
-          lastScanAt: date.toISOString(),
           platformPerformance: [
              { platform: 'TikTok', buzzLevel: score + 5, sentiment: 'Positive', topContent: 'Trailer reaction' },
              { platform: 'Instagram', buzzLevel: score - 2, sentiment: 'Positive', topContent: 'Cast showcase' }
@@ -270,6 +276,7 @@ export const dbService = {
             gapToP50: Math.round(((targetReach - reach) / targetReach) * 100),
             conversionRates: {
               awarenessToInterest: 12,
+              interestToIntent: 8,
               interestToIntent: 8,
               intentToTicket: 5
             }

@@ -95,17 +95,19 @@ app.post("/api/gemini/generate", async (req, res) => {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     
+    const { tools, toolConfig, ...generationSettings } = config || {};
+    
     const generationConfig = {
-      ...config,
+      ...generationSettings,
       // Ensure responseMimeType is passed if provided
-      responseMimeType: (config as any)?.responseMimeType || 'text/plain',
+      responseMimeType: generationSettings.responseMimeType || 'text/plain',
     };
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig,
-      tools: config.tools || [],
-      toolConfig: config.toolConfig || undefined
+      tools: tools || [],
+      toolConfig: toolConfig || undefined
     });
 
     const response = await result.response;

@@ -6,7 +6,7 @@ import { Search, Plus, Loader2, Edit2 } from 'lucide-react';
 import NewCampaignModal from '../components/modals/NewCampaignModal';
 import EditCampaignModal from '../components/modals/EditCampaignModal';
 import { dbService } from '../services/dbService';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../hooks/useAuth';
 import { FilmProfileInput } from '../lib/types';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ type FilterType = 'All' | 'active' | 'pre-release' | 'post';
 export default function Campaigns() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
+  const { user, loading: authLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<FilterType>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,16 +28,15 @@ export default function Campaigns() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (!authLoading) {
       if (user) {
         loadCampaigns(user.uid);
       } else {
         setCampaigns([]);
         setLoading(false);
       }
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [user, authLoading]);
 
   const loadCampaigns = async (uid?: string) => {
     setLoading(true);

@@ -19,27 +19,27 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 
-import { auth } from '../lib/firebase';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Library() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
+  const { user, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [reportsMap, setReportsMap] = useState<Record<string, { dna: boolean, box: boolean, fib: boolean }>>({});
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (!authLoading) {
       if (user) {
         fetchData(user.uid);
       } else {
         setCampaigns([]);
         setLoading(false);
       }
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [user, authLoading]);
 
   const fetchData = async (uid?: string) => {
     setLoading(true);

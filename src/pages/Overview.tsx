@@ -7,26 +7,26 @@ import { cn } from '../lib/utils';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { dbService } from '../services/dbService';
-import { auth } from '../lib/firebase';
+import { useAuth } from '../hooks/useAuth';
 import { useFilmContext } from '../hooks/useFilmContext';
 
 export default function Overview() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
+  const { user, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (!authLoading) {
       if (user) {
         loadData(user.uid);
       } else {
         setCampaigns([]);
         setLoading(false);
       }
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [user, authLoading]);
 
   const loadData = async (uid?: string) => {
     setLoading(true);
