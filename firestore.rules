@@ -43,8 +43,8 @@ service cloud.firestore {
       return (data.userId == request.auth.uid || isAdmin())
           && data.title is string && data.title.size() <= 200
           && data.createdAt is timestamp
-          && (data.lastVisibilityScan == null || data.lastVisibilityScan is timestamp)
-          && (data.releaseDate == null || (data.releaseDate is string && data.releaseDate.size() <= 64));
+          && (data.get('lastVisibilityScan', null) == null || data.lastVisibilityScan is timestamp)
+          && (data.get('releaseDate', null) == null || (data.releaseDate is string && data.releaseDate.size() <= 64));
     }
 
     function isValidVisibility(data) {
@@ -52,16 +52,16 @@ service cloud.firestore {
           && data.campaignId is string && data.campaignId.size() <= 128
           && data.visibilityScore is number
           && data.sentiment is map
-          && (data.metrics == null || data.metrics is map)
-          && (data.trajectory == null || data.trajectory is map)
-          && (data.funnel == null || data.funnel is map)
-          && (data.platformPerformance == null || data.platformPerformance is list)
-          && (data.evidencePoints == null || data.evidencePoints is list)
-          && (data.trends == null || data.trends is list)
-          && (data.topGeographies == null || data.topGeographies is list)
-          && (data.summary == null || data.summary is string)
-          && (data.strategicAdvice == null || data.strategicAdvice is string)
-          && (data.benchmarkContext == null || data.benchmarkContext is string)
+          && (data.get('metrics', null) == null || data.metrics is map)
+          && (data.get('trajectory', null) == null || data.trajectory is map)
+          && (data.get('funnel', null) == null || data.funnel is map)
+          && (data.get('platformPerformance', null) == null || data.platformPerformance is list)
+          && (data.get('evidencePoints', null) == null || data.evidencePoints is list)
+          && (data.get('trends', null) == null || data.trends is list)
+          && (data.get('topGeographies', null) == null || data.topGeographies is list)
+          && (data.get('summary', null) == null || data.summary is string)
+          && (data.get('strategicAdvice', null) == null || data.strategicAdvice is string)
+          && (data.get('benchmarkContext', null) == null || data.benchmarkContext is string)
           && data.createdAt is timestamp;
     }
 
