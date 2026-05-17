@@ -92,8 +92,7 @@ export async function runAudienceDNA(input: FilmProfileInput, context?: string):
     const response = await generateWithRetry(
       prompt,
       {
-        responseMimeType: 'application/json',
-        thinkingConfig: { thinkingLevel: 'LOW' }
+        responseMimeType: 'application/json'
       }
     );
 
@@ -154,8 +153,7 @@ export async function runBoxPredict(
     const response = await generateWithRetry(
       prompt,
       {
-        responseMimeType: 'application/json',
-        thinkingConfig: { thinkingLevel: 'LOW' }
+        responseMimeType: 'application/json'
       }
     );
 
