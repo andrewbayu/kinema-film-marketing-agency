@@ -92,12 +92,11 @@ export async function runAudienceDNA(input: FilmProfileInput, context?: string):
     const response = await generateWithRetry(
       prompt,
       {
-        tools: [{ googleSearch: {} }],
         responseMimeType: 'application/json',
         thinkingConfig: { thinkingLevel: 'LOW' }
       }
     );
-    
+
     const text = response.text || '';
     return JSON.parse(text) as AudienceDNAResult;
   } catch (error) {
@@ -155,12 +154,11 @@ export async function runBoxPredict(
     const response = await generateWithRetry(
       prompt,
       {
-        tools: [{ googleSearch: {} }],
         responseMimeType: 'application/json',
         thinkingConfig: { thinkingLevel: 'LOW' }
       }
     );
-    
+
     const text = response.text || '';
     return JSON.parse(text) as BoxPredictResult;
   } catch (error) {
@@ -272,13 +270,10 @@ export async function generateCineForgeContent(
     const response = await generateWithRetry(
       prompt,
       {
-        responseMimeType: 'application/json',
-        tools: useLiveTrends ? [{ googleSearch: {} }] : [],
-        // Required when using tools with Gemini 3
-        toolConfig: useLiveTrends ? { includeServerSideToolInvocations: true } : undefined
+        responseMimeType: 'application/json'
       }
     );
-    
+
     const text = response.text || '';
     return JSON.parse(text) as CineForgeResult;
   } catch (error) {
@@ -294,11 +289,57 @@ export async function performVisibilityScan(
 ): Promise<VisibilityTrackerResult> {
   const currentDate = new Date().toISOString();
   const contextBlock = context ? `\nDATA KONTEKSTUAL TERBARU (Firecrawl Deep Scan):\n${context}\n` : '';
-  
-  const benchmarkConstraint = boxPredictResult 
+
+  const benchmarkConstraint = boxPredictResult
     ? `PENTING: Kamu WAJIB menggunakan angka P50 Admissions berikut sebagai target benchmark: ${boxPredictResult.scenarios.base.admissions}. Jangan menghitung angka baru.`
     : `PENTING: Hitung estimasi admissions P50 yang realistis untuk pasar Indonesia berdasarkan genre, cast, dan budget tier film ini.`;
 
+  // -----------------------------------------------------------------
+  // PASS 1: Grounding pass — use Google Search to gather fresh data.
+  // No responseMimeType (Gemini rejects tools + JSON output combined).
+  // Output is free-form markdown that Pass 2 will consume.
+  // -----------------------------------------------------------------
+  const groundingPrompt = `
+    ${KINEMA_SYSTEM_PROMPT}
+
+    Riset real-time untuk film berikut. Pakai Google Search Grounding agresif.
+
+    JUDUL: ${filmInput.title}
+    GENRE: ${filmInput.genre}
+    LEAD: ${filmInput.leadCast}
+    RELEASE DATE: ${filmInput.releaseDate}
+    TODAY'S DATE: ${currentDate}
+    ${contextBlock}
+
+    Temukan dan rangkum dalam markdown:
+    1. Google Trends Indonesia: search volume index (0-100) untuk judul film + cast utama.
+    2. Buzz sosial media (TikTok / Instagram / X): views, likes, shares — angka konkret jika ada, atau deskripsi jangkauan ("Low coverage", "Rising buzz") kalau tidak.
+    3. Daftar artikel berita rill dari portal hiburan Indonesia (kompas.com, detik.com, cnnindonesia.com, tempo.co, dll). Sertakan judul + tanggal.
+    4. Kompetitor genre serupa yang sedang dibahas — untuk benchmarking Share of Voice.
+    5. Sentimen publik terbaru — kutipan komentar / headline kalau menemukan.
+
+    PENTING: Jangan mengarang angka. Jika tidak menemukan, tulis "data tidak tersedia".
+    Output: ringkasan markdown 300-500 kata dengan angka konkret + sumber. Bukan JSON.
+  `;
+
+  let groundedResearch = "";
+  try {
+    const grounding = await generateWithRetry(
+      groundingPrompt,
+      {
+        tools: [{ googleSearch: {} }],
+        toolConfig: { includeServerSideToolInvocations: true }
+      }
+    );
+    groundedResearch = grounding.text || "";
+  } catch (err) {
+    console.warn("Visibility scan grounding pass failed; continuing with Firecrawl context only", err);
+  }
+
+  // -----------------------------------------------------------------
+  // PASS 2: Structuring pass — shape grounded research into the
+  // VisibilityTrackerResult JSON schema. No tools, JSON output enabled.
+  // -----------------------------------------------------------------
   const prompt = `
     ${KINEMA_SYSTEM_PROMPT}
 
@@ -310,9 +351,13 @@ export async function performVisibilityScan(
     TODAY'S DATE: ${currentDate}
 
     ${benchmarkConstraint}
+
+    HASIL RISET REAL-TIME (Pass 1 — gunakan ini sebagai sumber utama angka):
+    ${groundedResearch || "(Pass 1 tidak menghasilkan data — gunakan estimasi konservatif berdasarkan Firecrawl context di bawah)"}
+
     ${contextBlock}
 
-    Tugasmu adalah melakukan pemantauan rill (gunakan Google Search Grounding) untuk mendeteksi data VALID:
+    Konversi temuan di atas menjadi struktur data VALID:
     1. Search Volume index (0-100) - Ambil dari data Google Trends Indonesia terbaru.
     2. Social Media Buzz (TikTok, Instagram, X) - Cari data views, likes, dan shares rill jika tersedia. Jika tidak ada, berikan estimasi volume diskusi yang jujur.
     3. Media Hits - Hitung artikel berita rill dari portal hiburan Indonesia.
@@ -386,12 +431,10 @@ export async function performVisibilityScan(
     const response = await generateWithRetry(
       prompt,
       {
-        responseMimeType: 'application/json',
-        tools: [{ googleSearch: {} }],
-        toolConfig: { includeServerSideToolInvocations: true }
+        responseMimeType: 'application/json'
       }
     );
-    
+
     const text = response.text || '';
     return JSON.parse(text) as VisibilityTrackerResult;
   } catch (error) {
