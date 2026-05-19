@@ -3,8 +3,6 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, signInWithGoogle, db } from '../lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
-import { SUPER_ADMIN_EMAIL } from '../constants';
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -27,37 +25,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
       
       if (user) {
-        // Check if Admin
-        if (user.email === SUPER_ADMIN_EMAIL) {
-          setIsAdmin(true);
-          setIsAuthorized(true);
-        } else {
-          try {
-            // Check admins collection
-            const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-            if (adminDoc.exists()) {
+        try {
+          const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+          if (adminDoc.exists()) {
+            setIsAdmin(true);
+            setIsAuthorized(true);
+          } else {
+            const teamDoc = await getDoc(doc(db, 'team', user.email!));
+            if (teamDoc.exists()) {
               setIsAdmin(true);
               setIsAuthorized(true);
             } else {
-              // Check team collection (email-based admin)
-              const teamDoc = await getDoc(doc(db, 'team', user.email!));
-              if (teamDoc.exists()) {
-                setIsAdmin(true);
-                setIsAuthorized(true);
-              } else {
-                setIsAdmin(false);
-                // Check clients collection
-                const clientsRef = collection(db, 'clients');
-                const q = query(clientsRef, where('email', '==', user.email));
-                const querySnapshot = await getDocs(q);
-                setIsAuthorized(!querySnapshot.empty);
-              }
+              setIsAdmin(false);
+              const clientsRef = collection(db, 'clients');
+              const q = query(clientsRef, where('email', '==', user.email));
+              const querySnapshot = await getDocs(q);
+              setIsAuthorized(!querySnapshot.empty);
             }
-          } catch (error) {
-            console.error("Auth status check failed", error);
-            setIsAdmin(false);
-            setIsAuthorized(false);
           }
+        } catch (error) {
+          console.error("Auth status check failed", error);
+          setIsAdmin(false);
+          setIsAuthorized(false);
         }
       } else {
         setIsAdmin(false);

@@ -1,5 +1,3 @@
-export const SUPER_ADMIN_EMAIL = 'andrew.bayu23@gmail.com';
-
 export const APP_CONFIG = {
   NAME: 'Kinema Intelligence',
   DESCRIPTION: 'Film Marketing & Audience Intelligence Portal',
