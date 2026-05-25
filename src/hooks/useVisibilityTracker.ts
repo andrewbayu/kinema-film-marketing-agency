@@ -65,20 +65,32 @@ export function useVisibilityTracker(activeFilm: Film | null) {
       
       setError(null);
       
-      // 1. Firecrawl Deep Research (Gather contextual data)
-      let crawlContext = "";
-      try {
-        const searchQuery = `performa film "${activeFilm.title}" buzz media sosial indonesia tiktok instagram 2025`;
-        crawlContext = await firecrawlService.searchAndScrape(searchQuery, 4);
-      } catch (err) {
-        console.warn("Firecrawl search failed, proceeding with standard scan", err);
+      // 1. Firecrawl Deep Research + benchmarks + AudienceDNA in parallel.
+      const [crawlContextResult, benchmark, audienceDNA] = await Promise.all([
+        (async () => {
+          try {
+            const searchQuery = `performa film "${activeFilm.title}" buzz media sosial indonesia tiktok instagram 2025`;
+            return await firecrawlService.searchAndScrape(searchQuery, 4);
+          } catch (err) {
+            console.warn("Firecrawl search failed, proceeding with standard scan", err);
+            return "";
+          }
+        })(),
+        dbService.getLatestBoxPredict(activeFilm.id),
+        dbService.getLatestAudienceDNA(activeFilm.id)
+      ]);
+
+      if (!audienceDNA?.mediaUniverse?.length) {
+        console.warn("No mediaUniverse found in AudienceDNA — visibility scan will fall back to AI-estimated mediaHits. Re-run AudienceDNA to populate media universe.");
       }
 
-      // 2. Box Base benchmark
-      const benchmark = await dbService.getLatestBoxPredict(activeFilm.id);
-      
-      // 3. Perform Gemini Scan with context + search grounding
-      const result = await performVisibilityScan(activeFilm as any, benchmark || undefined, crawlContext);
+      // 2. Perform Gemini Scan with real data sources + grounded context
+      const result = await performVisibilityScan(
+        activeFilm as any,
+        benchmark || undefined,
+        audienceDNA || undefined,
+        crawlContextResult
+      );
       await dbService.saveVisibilityScan(activeFilm.id, result);
       
       setLatestScan(result);

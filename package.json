@@ -24,6 +24,7 @@
     "express": "^4.21.2",
     "file-saver": "^2.0.5",
     "firebase": "^12.13.0",
+    "google-trends-api": "^4.9.2",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

@@ -80,6 +80,15 @@ export interface SegmentResult {
   mediaHabits?: string[];
 }
 
+export interface MediaSource {
+  type: 'mainstream' | 'niche' | 'kol' | 'community';
+  name: string;
+  url?: string; // domain or handle URL — required for 'web' platform sources
+  platform: 'web' | 'instagram' | 'tiktok' | 'youtube' | 'x' | 'telegram';
+  segment: string; // which AudienceDNA segment this source serves
+  rationale: string; // why this source matches the audience
+}
+
 export interface AudienceDNAResult {
   segments: SegmentResult[];
   primarySegment: string;
@@ -90,6 +99,7 @@ export interface AudienceDNAResult {
     priority: 'High' | 'Medium' | 'Low';
     reason: string;
   }>;
+  mediaUniverse?: MediaSource[]; // curated outlets/KOLs/communities for visibility tracking
 }
 
 export interface ScenarioData {

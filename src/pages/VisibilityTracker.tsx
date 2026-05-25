@@ -584,33 +584,41 @@ export default function VisibilityTracker() {
 
             {/* Core Metrics */}
             <div className="space-y-4">
-              <MetricCard 
-                label="Search Volume" 
-                value={latestScan?.metrics?.searchVolume || 0} 
-                icon={Search} 
-                desc="Indonesian Intent Index"
-                info="Volume pencarian kata kunci terkait film ini di Google Search Indonesia."
+              <MetricCard
+                label="Search Volume"
+                value={latestScan?.metrics?.searchVolume || 0}
+                icon={Search}
+                desc="Google Trends Index (0-100)"
+                info="Skor minat pencarian dari Google Trends Indonesia (7 hari terakhir). 0 = tidak ada minat terdeteksi, 100 = puncak periode."
+                source="verified"
+                sourceLabel="Google Trends ID"
               />
-              <MetricCard 
-                label="Social Buzz" 
-                value={latestScan?.metrics?.socialBuzz || 0} 
-                icon={Share2} 
-                desc="TikTok/IG Velocity"
-                info="Intensitas interaksi (likes, shares, comments) di platform media sosial utama."
+              <MetricCard
+                label="Social Buzz"
+                value={latestScan?.metrics?.socialBuzz || 0}
+                icon={Share2}
+                desc="TikTok/IG estimated buzz"
+                info="Estimasi intensitas percakapan di TikTok/IG/X. Belum terhubung ke API platform — angka adalah estimasi AI berdasarkan KOL list di AudienceDNA + narasi web."
+                source="ai-estimate"
+                sourceLabel="AI Est."
               />
-              <MetricCard 
-                label="Media Hits" 
-                value={latestScan?.metrics?.mediaHits || 0} 
-                icon={MessageSquare} 
-                desc="PR News Coverage"
-                info="Jumlah publikasi artikel berita di portal media hiburan nasional."
+              <MetricCard
+                label="Media Hits"
+                value={latestScan?.metrics?.mediaHits || 0}
+                icon={MessageSquare}
+                desc="Artikel terdeteksi (Firecrawl)"
+                info="Jumlah artikel rill yang menyebut film ini, dihitung via Firecrawl site-search di seluruh media universe (mainstream + niche) yang dipetakan oleh AudienceDNA."
+                source="verified"
+                sourceLabel="Firecrawl"
               />
-              <MetricCard 
-                label="Share of Voice" 
-                value={latestScan?.metrics?.shareOfVoice || 0} 
-                icon={BarChart3} 
-                desc="Competitive Dominance"
-                info="Persentase volume percakapan film ini dibandingkan dengan film pesaing di periode yang sama."
+              <MetricCard
+                label="Share of Voice"
+                value={latestScan?.metrics?.shareOfVoice || 0}
+                icon={BarChart3}
+                desc="vs kompetitor (estimasi)"
+                info="Estimasi AI seberapa dominan film ini dibanding kompetitor genre serupa. Masih estimasi — belum ada data SOV terverifikasi."
+                source="ai-estimate"
+                sourceLabel="AI Est."
               />
             </div>
 

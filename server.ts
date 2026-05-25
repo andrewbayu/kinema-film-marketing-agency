@@ -1,12 +1,16 @@
 import express from "express";
 import path from "path";
 import cors from "cors";
+import { createRequire } from "module";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import FirecrawlApp from '@mendable/firecrawl-js';
 import dotenv from "dotenv";
 
 dotenv.config();
+
+const require = createRequire(import.meta.url);
+const googleTrends: any = require('google-trends-api');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -97,6 +101,142 @@ app.post("/api/firecrawl/scrape", async (req, res) => {
   } catch (error: any) {
     console.error("Firecrawl Scrape API Error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Firecrawl site-specific search across a media universe.
+// Used by visibility scan to count real article mentions per outlet.
+app.post("/api/firecrawl/site-search", async (req, res) => {
+  const { title, sources } = req.body || {};
+  if (!title || typeof title !== 'string') {
+    return res.status(400).json({ error: "Missing 'title' (string)" });
+  }
+  if (!Array.isArray(sources)) {
+    return res.status(400).json({ error: "Missing 'sources' (array)" });
+  }
+  if (!process.env.FIRECRAWL_API_KEY) {
+    return res.status(500).json({ error: "Firecrawl API key not configured" });
+  }
+
+  const extractDomain = (url: string): string | null => {
+    try {
+      const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+      return u.hostname.replace(/^www\./, '');
+    } catch {
+      return null;
+    }
+  };
+
+  const webSources = sources.filter((s: any) =>
+    s && (s.platform === 'web' || !s.platform) && typeof s.url === 'string'
+  );
+  const skipped = sources.filter((s: any) => !webSources.includes(s));
+
+  const queries = webSources.map((s: any) => {
+    const domain = extractDomain(s.url);
+    return { source: s, domain, query: domain ? `site:${domain} "${title}"` : null };
+  }).filter((q: any) => q.query !== null);
+
+  const results = await Promise.all(queries.map(async ({ source, domain, query }: any) => {
+    try {
+      const resp: any = await firecrawl.search(query!, {
+        limit: 5,
+        scrapeOptions: { formats: [] } // only need URLs, not content
+      });
+      const data = resp?.data || resp?.success_data || resp || [];
+      const items = Array.isArray(data) ? data : (data.data || []);
+      return {
+        name: source.name,
+        domain,
+        type: source.type,
+        hits: items.length,
+        items: items.slice(0, 3).map((it: any) => ({
+          title: it.title || '',
+          url: it.url || '',
+          snippet: (it.description || it.markdown || '').slice(0, 200)
+        }))
+      };
+    } catch (err: any) {
+      return {
+        name: source.name,
+        domain,
+        type: source.type,
+        hits: 0,
+        items: [],
+        error: err?.message || String(err)
+      };
+    }
+  }));
+
+  const totalHits = results.reduce((sum, r) => sum + (r.hits || 0), 0);
+  res.json({
+    totalHits,
+    perSource: results,
+    skipped: skipped.map((s: any) => ({ name: s.name, reason: 'non-web platform' }))
+  });
+});
+
+// Google Trends Endpoint (real searchVolume signal — anonymous, no key)
+app.post("/api/trends", async (req, res) => {
+  const { keyword, geo = 'ID', timeframe = 'now 7-d' } = req.body || {};
+  if (!keyword || typeof keyword !== 'string') {
+    return res.status(400).json({ error: "Missing 'keyword' (string)" });
+  }
+
+  // Map our timeframe strings to startTime Dates accepted by google-trends-api
+  const now = Date.now();
+  const startTime = (() => {
+    switch (timeframe) {
+      case 'now 1-d': return new Date(now - 24 * 60 * 60 * 1000);
+      case 'now 7-d': return new Date(now - 7 * 24 * 60 * 60 * 1000);
+      case 'today 1-m': return new Date(now - 30 * 24 * 60 * 60 * 1000);
+      case 'today 3-m': return new Date(now - 90 * 24 * 60 * 60 * 1000);
+      default: return new Date(now - 7 * 24 * 60 * 60 * 1000);
+    }
+  })();
+
+  try {
+    const raw: string = await googleTrends.interestOverTime({ keyword, geo, startTime });
+    const parsed = JSON.parse(raw);
+    const timeline: Array<{ time: string; value: number[] }> =
+      parsed?.default?.timelineData || [];
+
+    if (timeline.length === 0) {
+      return res.json({
+        interestScore: 0,
+        avgScore: 0,
+        peakScore: 0,
+        peakDate: null,
+        dataPoints: 0,
+        note: "No trends data returned (low search volume or new keyword)"
+      });
+    }
+
+    const values = timeline.map(t => (Array.isArray(t.value) ? t.value[0] : 0));
+    const latest = values[values.length - 1] || 0;
+    const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+    const peakIdx = values.indexOf(Math.max(...values));
+    const peakDate = timeline[peakIdx]
+      ? new Date(parseInt(timeline[peakIdx].time, 10) * 1000).toISOString()
+      : null;
+
+    res.json({
+      interestScore: latest,
+      avgScore: avg,
+      peakScore: values[peakIdx] || 0,
+      peakDate,
+      dataPoints: values.length,
+      timeline: timeline.map(t => ({
+        date: new Date(parseInt(t.time, 10) * 1000).toISOString(),
+        value: Array.isArray(t.value) ? t.value[0] : 0
+      }))
+    });
+  } catch (error: any) {
+    console.error("Google Trends API Error:", error?.message || error);
+    res.status(503).json({
+      error: "Google Trends temporarily unavailable",
+      detail: error?.message || String(error)
+    });
   }
 });
 

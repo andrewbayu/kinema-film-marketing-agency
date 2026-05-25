@@ -7,9 +7,11 @@ interface MetricCardProps {
   icon: any;
   desc: string;
   info?: string;
+  source?: 'verified' | 'ai-estimate'; // attribution badge
+  sourceLabel?: string; // e.g. "Google Trends ID", "Firecrawl"
 }
 
-export function MetricCard({ label, value, icon: Icon, desc, info }: MetricCardProps) {
+export function MetricCard({ label, value, icon: Icon, desc, info, source, sourceLabel }: MetricCardProps) {
   return (
     <div className="bg-black-1 border border-border-subtle rounded-card p-4 group hover:border-crimson/30 transition-all flex items-center gap-4">
       <div className="p-2.5 bg-black-2 rounded-lg border border-border-subtle group-hover:bg-crimson/10 group-hover:border-crimson/30 transition-colors">
@@ -23,7 +25,18 @@ export function MetricCard({ label, value, icon: Icon, desc, info }: MetricCardP
           </h4>
           <span className="text-[18px] font-black text-ink-primary font-mono">{value}</span>
         </div>
-        <p className="text-[10px] text-ink-tertiary truncate">{desc}</p>
+        <div className="flex items-center justify-between gap-2 mt-0.5">
+          <p className="text-[10px] text-ink-tertiary truncate">{desc}</p>
+          {source && (
+            <span className={
+              source === 'verified'
+                ? "text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 whitespace-nowrap"
+                : "text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-ink-tertiary/10 text-ink-tertiary whitespace-nowrap"
+            }>
+              {source === 'verified' ? `✓ ${sourceLabel || 'Verified'}` : `~ ${sourceLabel || 'AI Est.'}`}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
