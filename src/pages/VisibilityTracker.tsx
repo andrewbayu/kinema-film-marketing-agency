@@ -26,18 +26,18 @@ import { useVisibilityTracker } from '../hooks/useVisibilityTracker';
 import { MetricCard } from '../components/visibility/MetricCard';
 import { InfoTooltip } from '../components/ui/InfoTooltip';
 import { ShowtimePanel } from '../components/visibility/ShowtimePanel';
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   PieChart,
   Pie,
-  Cell,
-  ReferenceLine
+  Cell
 } from 'recharts';
 
 const METRIC_INFO = {
@@ -95,6 +95,12 @@ export default function VisibilityTracker() {
   ] : [];
 
   // Chart Filtering Logic
+  // Build the cumulative series across the FULL history first, then filter to the
+  // visible window. This keeps the "Current Reach" counter stable across range
+  // toggles — switching 1W→4H no longer rebases the cumulative max to whatever
+  // happens to be the lowest point in the last 4 hours.
+  // Failed scans (currentAwareness === 0/null) are dropped before the cumulative
+  // pass so they don't silently masquerade as "no growth".
   const getFilteredData = () => {
     const now = Date.now();
     const ranges = {
@@ -102,45 +108,84 @@ export default function VisibilityTracker() {
       '1D': 24 * 60 * 60 * 1000,
       '1W': 7 * 24 * 60 * 60 * 1000,
     };
-
     const period = ranges[timeRange];
-    
+
     let maxReachSoFar = 0;
-    
-    return [...history]
+    const cumulative = [...history]
       .filter(h => h && h.lastScanAt && h.funnel && typeof h.funnel === 'object')
-      .filter(h => (now - new Date(h.lastScanAt).getTime()) <= period)
+      .filter(h => (h.funnel?.currentAwareness ?? 0) > 0)
       .sort((a, b) => new Date(a.lastScanAt).getTime() - new Date(b.lastScanAt).getTime())
       .map(h => {
-        // Enforce cumulative trend: reach can only go up or stay flat
-        const currentReach = h.funnel?.currentAwareness || 0;
-        maxReachSoFar = Math.max(maxReachSoFar, currentReach);
+        const reach = h.funnel?.currentAwareness || 0;
+        maxReachSoFar = Math.max(maxReachSoFar, reach);
         return {
-          timestamp: new Date(h.lastScanAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date(h.lastScanAt).getTime(),
           reach: maxReachSoFar,
           target: h.funnel?.requiredAwareness || 0
         };
       });
+
+    return cumulative.filter(p => (now - p.timestamp) <= period);
+  };
+
+  const formatXTick = (ts: number) => {
+    const d = new Date(ts);
+    if (timeRange === '1W') {
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    }
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatTooltipLabel = (ts: number) =>
+    new Date(ts).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+  // Localized big-number formatter. Indonesian convention: 1.000 = 1RB, 1.000.000 = 1JT.
+  // `precise` adds decimals for tooltip values; ticks stay short.
+  const formatBigNumber = (val: number, precise = false) => {
+    if (val >= 1_000_000) {
+      return `${(val / 1_000_000).toFixed(precise ? 2 : 1)}JT`;
+    }
+    if (val >= 1_000) {
+      return `${(val / 1_000).toFixed(precise ? 1 : 0)}RB`;
+    }
+    return val.toLocaleString('id-ID');
   };
 
   const trendData = getFilteredData();
   const targetReach = latestScan?.funnel?.requiredAwareness || 0;
 
-  // Calculate Y-axis domain for TradingView-style scaling
+  // Calculate Y-axis domain for TradingView-style scaling. Include per-point
+  // target values so the dashed P50 line is always within the visible range.
   const reachValues = trendData.map(d => d.reach);
-  const allValues = reachValues.length > 0 ? [...reachValues, targetReach] : [targetReach];
+  const targetValues = trendData.map(d => d.target).filter(v => v > 0);
+  const allValues = (reachValues.length > 0 || targetValues.length > 0)
+    ? [...reachValues, ...targetValues, targetReach]
+    : [targetReach];
   const minVal = Math.min(...allValues);
   const maxVal = Math.max(...allValues);
   
-  // Padding for the graph (e.g. 15% top and bottom to ensure labels don't get cut)
-  const yPadding = (maxVal - minVal) * 0.15 || maxVal * 0.15;
+  // Padding for the graph (15% top and bottom). Floor at 1000 so we never produce a
+  // collapsed [0,0] domain when everything is zero — the axis would have no ticks.
+  const yPadding = Math.max((maxVal - minVal) * 0.15, maxVal * 0.15, 1000);
   const yDomainMin = Math.max(0, minVal - yPadding);
-  const yDomainMax = maxVal + yPadding;
+  const yDomainMax = Math.max(maxVal + yPadding, yDomainMin + 1);
 
   // Ensure consistent display between chart and counter (Cumulative Awareness)
-  const currentReachDisplay = trendData.length > 0 
-    ? trendData[trendData.length - 1].reach 
+  const currentReachDisplay = trendData.length > 0
+    ? trendData[trendData.length - 1].reach
     : (latestScan?.funnel?.currentAwareness || 0);
+
+  // Single-point chart needs an explicit X-domain — Recharts collapses dataMin/dataMax
+  // to the same value otherwise and the dot renders off-screen.
+  const isSinglePoint = trendData.length === 1;
+  const xDomain: [number | string, number | string] = isSinglePoint
+    ? [trendData[0].timestamp - 30 * 60 * 1000, trendData[0].timestamp + 30 * 60 * 1000]
+    : ['dataMin', 'dataMax'];
 
   const formatCooldown = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -281,65 +326,94 @@ export default function VisibilityTracker() {
                 </div>
               </div>
 
+              <div className="flex items-center gap-4 mb-3 text-[9px] font-mono uppercase tracking-wider text-ink-tertiary">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-4 h-0.5 bg-crimson"></span>
+                  Reach
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-4 border-t-2 border-dashed border-yellow-500"></span>
+                  P50 Target
+                </span>
+              </div>
+
               <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorReach" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ee1d23" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ee1d23" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                    <XAxis 
-                      dataKey="timestamp" 
-                      stroke="#ffffff20" 
-                      fontSize={10} 
-                      tickLine={false} 
-                      axisLine={false}
-                      tick={{ fill: '#94a3b8' }}
-                    />
-                    <YAxis 
-                      stroke="#ffffff20" 
-                      fontSize={10} 
-                      tickLine={false} 
-                      axisLine={false}
-                      tick={{ fill: '#94a3b8' }}
-                      domain={[yDomainMin, yDomainMax]}
-                      tickFormatter={(val) => (val >= 1000000 ? `${(val / 1000000).toFixed(1)}JT` : val.toLocaleString())}
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '8px' }}
-                      itemStyle={{ color: '#ee1d23', fontSize: '12px', fontWeight: 'bold' }}
-                      labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
-                      formatter={(val: number) => [val >= 1000000 ? `${(val / 1000000).toFixed(2)}JT` : val.toLocaleString(), 'Reach']}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="reach" 
-                      stroke="#ee1d23" 
-                      strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorReach)" 
-                      animationDuration={1500}
-                    />
-                    {/* @ts-ignore */}
-                    <ReferenceLine 
-                      y={targetReach} 
-                      stroke="#eab308" 
-                      strokeDasharray="5 5" 
-                      strokeWidth={2}
-                      label={{ 
-                        position: 'right', 
-                        value: 'P50 TARGET', 
-                        fill: '#eab308', 
-                        fontSize: 10, 
-                        fontWeight: 'black',
-                        dy: -10
-                      }} 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                {trendData.length === 0 ? (
+                  <div className="h-full w-full flex flex-col items-center justify-center text-center space-y-3 bg-black-2/30 rounded-xl border border-dashed border-border-subtle/50">
+                    <Globe className="w-8 h-8 text-ink-tertiary/40" />
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-black text-ink-secondary uppercase tracking-wider">No Scans in This Window</div>
+                      <div className="text-[10px] text-ink-tertiary italic max-w-xs">
+                        Try a wider time range, or run a deep scan to populate the trend line.
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorReach" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ee1d23" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#ee1d23" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                      <XAxis
+                        dataKey="timestamp"
+                        type="number"
+                        scale="time"
+                        domain={xDomain}
+                        stroke="#ffffff20"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        tickFormatter={formatXTick}
+                      />
+                      <YAxis
+                        stroke="#ffffff20"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        domain={[yDomainMin, yDomainMax]}
+                        tickFormatter={(val) => formatBigNumber(val)}
+                      />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '8px' }}
+                        labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
+                        labelFormatter={formatTooltipLabel}
+                        formatter={(val: number, name: string) => [
+                          formatBigNumber(val, true),
+                          name === 'reach' ? 'Reach' : 'P50 Target'
+                        ]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="reach"
+                        name="reach"
+                        stroke="#ee1d23"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorReach)"
+                        animationDuration={1500}
+                        dot={isSinglePoint ? { r: 5, fill: '#ee1d23', stroke: '#ee1d23' } : false}
+                        activeDot={{ r: 6, fill: '#ee1d23', stroke: '#fff', strokeWidth: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="target"
+                        name="target"
+                        stroke="#eab308"
+                        strokeDasharray="5 5"
+                        strokeWidth={2}
+                        dot={isSinglePoint ? { r: 4, fill: '#eab308', stroke: '#eab308' } : false}
+                        activeDot={{ r: 5, fill: '#eab308', stroke: '#fff', strokeWidth: 2 }}
+                        animationDuration={1500}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pt-8 border-t border-border-subtle/30">
