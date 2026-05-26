@@ -200,6 +200,43 @@ export interface LiveTickerData {
   }>;
 }
 
+// -------------------- Showtime Allocation --------------------
+export type CinemaChain = 'XXI' | 'CGV' | 'Cinepolis' | 'FLIX' | 'Platinum' | 'New Star' | 'Other';
+export type FormatTier = 'regular' | 'premium' | 'imax' | 'other';
+export type CityTier = 'tier1' | 'tier2' | 'tier3';
+
+export interface CinemaShow {
+  cinema: string;
+  city: string;
+  chain: CinemaChain;
+  format: string; // raw format string from site (e.g. "Regular 2D", "IMAX", "SILVER Class")
+  tier: FormatTier;
+  price: number;
+  showtimes: string[]; // ["12:35", "14:40", ...]
+  date: string; // ISO date — the day these showtimes are scheduled for
+}
+
+export interface ShowtimeSnapshot {
+  campaignId: string;
+  userId: string;
+  filmUrl: string;
+  scannedAt: string;
+  scanMode: 'default' | 'deep';
+  // Aggregates
+  totalShows: number;
+  totalCinemas: number;
+  totalCities: number;
+  totalChains: number;
+  byCity: Array<{ city: string; count: number; tier: CityTier }>;
+  byChain: Array<{ chain: CinemaChain; count: number }>;
+  byFormat: Array<{ format: string; count: number }>;
+  byTier: { regular: number; premium: number; imax: number; other: number };
+  shows: CinemaShow[]; // raw rows for drill-down
+  velocity?: number; // % change in totalShows vs previous snapshot (computed at save time)
+  daysToRelease?: number; // negative = post-release, positive = pre-release
+  phase: 'pre-release' | 'release-week' | 'post-release';
+}
+
 export interface VisibilityTrackerResult {
   visibilityScore: number;
   metrics: {

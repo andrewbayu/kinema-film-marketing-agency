@@ -240,6 +240,250 @@ app.post("/api/trends", async (req, res) => {
   }
 });
 
+// ===================== Showtime Allocation =====================
+// Scrapes jadwalnonton.com for cinema/showtime data per campaign.
+
+const TIER_1_CITIES = ['jakarta', 'bandung', 'surabaya', 'medan', 'yogyakarta', 'bali', 'semarang'];
+const TIER_2_CITIES = ['makassar', 'palembang', 'pekanbaru', 'malang', 'denpasar', 'balikpapan'];
+
+function slugifyTitle(title: string): string {
+  return title.toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function detectChain(cinemaName: string): string {
+  const name = cinemaName.toUpperCase();
+  if (name.includes('XXI') || name.includes('CINEPLEX 21') || name.includes('IMAX 21')) return 'XXI';
+  if (name.includes('CGV')) return 'CGV';
+  if (name.includes('CINEPOLIS')) return 'Cinepolis';
+  if (name.includes('FLIX')) return 'FLIX';
+  if (name.includes('PLATINUM')) return 'Platinum';
+  if (name.includes('NEW STAR')) return 'New Star';
+  return 'Other';
+}
+
+function detectTier(format: string): 'regular' | 'premium' | 'imax' | 'other' {
+  const f = format.toUpperCase();
+  if (f.includes('IMAX')) return 'imax';
+  if (f.match(/REGULAR|2D(?!\s*(SATIN|VELVET|PREMIERE))/)) return 'regular';
+  if (f.match(/SATIN|VELVET|PREMIERE|SILVER|LUXE|GOLD|PLATINUM|DELUXE|4DX|SCREENX/)) return 'premium';
+  return 'other';
+}
+
+function detectCityTier(city: string): 'tier1' | 'tier2' | 'tier3' {
+  const c = city.toLowerCase();
+  if (TIER_1_CITIES.some(t => c.includes(t))) return 'tier1';
+  if (TIER_2_CITIES.some(t => c.includes(t))) return 'tier2';
+  return 'tier3';
+}
+
+async function scrapeShowtimePage(url: string): Promise<string> {
+  try {
+    const resp: any = await firecrawl.scrape(url, { formats: ['markdown'] });
+    return resp?.markdown || resp?.data?.markdown || '';
+  } catch (err: any) {
+    console.warn(`Firecrawl scrape failed for ${url}:`, err?.message || err);
+    return '';
+  }
+}
+
+async function parseShowtimesWithGemini(markdowns: Array<{ city: string; content: string }>, title: string): Promise<any[]> {
+  if (markdowns.every(m => !m.content)) return [];
+
+  const combinedContent = markdowns
+    .filter(m => m.content)
+    .map(m => `=== CITY: ${m.city} ===\n${m.content.slice(0, 30000)}\n=== END ${m.city} ===`)
+    .join('\n\n');
+
+  const prompt = `
+Kamu adalah parser data jadwal bioskop dari jadwalnonton.com untuk film "${title}".
+
+Tugas: Ekstrak SETIAP entri "cinema + format + showtimes" dari konten markdown di bawah menjadi JSON array.
+
+ATURAN:
+- Satu cinema bisa punya MULTIPLE format (Regular 2D, IMAX, Satin, Velvet, dll) — tiap format = 1 entry terpisah
+- Showtimes adalah array string format "HH:MM" (24-jam)
+- Price: integer rupiah, tanpa "Rp" atau titik (contoh: 30000, bukan "Rp 30.000")
+- Date: gunakan tanggal yang aktif di tab tanggal pada section tersebut. Format ISO YYYY-MM-DD. Kalau tidak terbaca, pakai tanggal hari ini.
+- City: ambil dari header section "=== CITY: ... ===" atau dari konten cinema (Jakarta, Bandung, dll)
+- Skip entry yang tidak punya showtimes konkret.
+- JANGAN buat data fiktif. Kalau tidak ada showtimes untuk film ini di satu kota, skip kota itu.
+
+Output: JSON array MURNI (tanpa markdown code fence), schema:
+[
+  {
+    "cinema": "string (nama bioskop, e.g. 'GRAND PARAGON XXI')",
+    "city": "string (kota)",
+    "format": "string (e.g. 'Regular 2D', 'IMAX', 'SILVER Class')",
+    "price": number,
+    "showtimes": ["HH:MM", ...],
+    "date": "YYYY-MM-DD"
+  }
+]
+
+KONTEN:
+${combinedContent}
+`;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    });
+    const text = (await result.response).text();
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err: any) {
+    console.error("Showtime parsing failed:", err?.message || err);
+    return [];
+  }
+}
+
+function aggregateShows(shows: any[]) {
+  const normalized = shows.map(s => ({
+    cinema: String(s.cinema || '').trim(),
+    city: String(s.city || '').trim(),
+    chain: detectChain(s.cinema || ''),
+    format: String(s.format || '').trim(),
+    tier: detectTier(s.format || ''),
+    price: Number(s.price) || 0,
+    showtimes: Array.isArray(s.showtimes) ? s.showtimes : [],
+    date: String(s.date || new Date().toISOString().slice(0, 10))
+  })).filter(s => s.cinema && s.showtimes.length > 0);
+
+  const totalShows = normalized.reduce((sum, s) => sum + s.showtimes.length, 0);
+  const uniqueCinemas = new Set(normalized.map(s => `${s.cinema}|${s.city}`));
+  const uniqueCities = new Set(normalized.map(s => s.city));
+  const uniqueChains = new Set(normalized.map(s => s.chain));
+
+  // byCity
+  const cityMap = new Map<string, number>();
+  normalized.forEach(s => {
+    cityMap.set(s.city, (cityMap.get(s.city) || 0) + s.showtimes.length);
+  });
+  const byCity = Array.from(cityMap.entries())
+    .map(([city, count]) => ({ city, count, tier: detectCityTier(city) }))
+    .sort((a, b) => b.count - a.count);
+
+  // byChain
+  const chainMap = new Map<string, number>();
+  normalized.forEach(s => {
+    chainMap.set(s.chain, (chainMap.get(s.chain) || 0) + s.showtimes.length);
+  });
+  const byChain = Array.from(chainMap.entries())
+    .map(([chain, count]) => ({ chain, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // byFormat
+  const formatMap = new Map<string, number>();
+  normalized.forEach(s => {
+    formatMap.set(s.format, (formatMap.get(s.format) || 0) + s.showtimes.length);
+  });
+  const byFormat = Array.from(formatMap.entries())
+    .map(([format, count]) => ({ format, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // byTier
+  const byTier = { regular: 0, premium: 0, imax: 0, other: 0 };
+  normalized.forEach(s => {
+    byTier[s.tier] += s.showtimes.length;
+  });
+
+  return {
+    totalShows,
+    totalCinemas: uniqueCinemas.size,
+    totalCities: uniqueCities.size,
+    totalChains: uniqueChains.size,
+    byCity,
+    byChain,
+    byFormat,
+    byTier,
+    shows: normalized
+  };
+}
+
+app.post("/api/showtimes", async (req, res) => {
+  const { title, releaseYear, mode = 'default', cities, releaseDate } = req.body || {};
+  if (!title || typeof title !== 'string') {
+    return res.status(400).json({ error: "Missing 'title' (string)" });
+  }
+  if (!process.env.FIRECRAWL_API_KEY) {
+    return res.status(500).json({ error: "Firecrawl API key not configured" });
+  }
+
+  const year = releaseYear || new Date().getFullYear();
+  const slug = slugifyTitle(title);
+  const baseUrl = `https://jadwalnonton.com/film/${year}/${slug}/`;
+
+  // Build URLs to scrape
+  const scrapeCities: string[] = mode === 'deep'
+    ? (cities && Array.isArray(cities) && cities.length > 0 ? cities : TIER_1_CITIES)
+    : ['jakarta']; // default = jakarta-only via main URL
+
+  const urls = mode === 'deep'
+    ? scrapeCities.map(c => `${baseUrl}di-${c.toLowerCase()}/`)
+    : [baseUrl];
+
+  const markdowns = await Promise.all(
+    urls.map(async (url, i) => ({
+      city: mode === 'deep' ? scrapeCities[i] : 'jakarta',
+      content: await scrapeShowtimePage(url)
+    }))
+  );
+
+  const anyContent = markdowns.some(m => m.content && m.content.length > 500);
+  if (!anyContent) {
+    return res.json({
+      filmUrl: baseUrl,
+      scannedAt: new Date().toISOString(),
+      scanMode: mode,
+      totalShows: 0,
+      totalCinemas: 0,
+      totalCities: 0,
+      totalChains: 0,
+      byCity: [],
+      byChain: [],
+      byFormat: [],
+      byTier: { regular: 0, premium: 0, imax: 0, other: 0 },
+      shows: [],
+      phase: computePhase(releaseDate),
+      daysToRelease: computeDaysToRelease(releaseDate),
+      error: "Film not listed on jadwalnonton.com yet, or URL slug mismatch."
+    });
+  }
+
+  const parsedShows = await parseShowtimesWithGemini(markdowns, title);
+  const aggregates = aggregateShows(parsedShows);
+
+  res.json({
+    filmUrl: baseUrl,
+    scannedAt: new Date().toISOString(),
+    scanMode: mode,
+    ...aggregates,
+    phase: computePhase(releaseDate),
+    daysToRelease: computeDaysToRelease(releaseDate)
+  });
+});
+
+function computeDaysToRelease(releaseDate?: string): number | null {
+  if (!releaseDate) return null;
+  const release = new Date(releaseDate);
+  if (isNaN(release.getTime())) return null;
+  return Math.ceil((release.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+}
+
+function computePhase(releaseDate?: string): 'pre-release' | 'release-week' | 'post-release' {
+  const days = computeDaysToRelease(releaseDate);
+  if (days === null) return 'pre-release';
+  if (days > 0) return 'pre-release';
+  if (days >= -7) return 'release-week';
+  return 'post-release';
+}
+
 // Gemini Endpoints
 app.post("/api/gemini/generate", async (req, res) => {
   const { prompt, config } = req.body;

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { VisibilityTrackerResult, Film } from '../lib/types';
+import { VisibilityTrackerResult, Film, ShowtimeSnapshot } from '../lib/types';
 import { dbService } from '../services/dbService';
 import { performVisibilityScan } from '../lib/gemini';
 import { firecrawlService } from '../services/firecrawlService';
+import { apiClient } from '../services/apiClient';
 
 export function useVisibilityTracker(activeFilm: Film | null) {
   const [loading, setLoading] = useState(false);
@@ -12,12 +13,18 @@ export function useVisibilityTracker(activeFilm: Film | null) {
   const [cooldown, setCooldown] = useState<number | null>(null);
   const [isAutoScanning, setIsAutoScanning] = useState(false);
   const [isBackfilling, setIsBackfilling] = useState(false);
+  const [latestShowtime, setLatestShowtime] = useState<ShowtimeSnapshot | null>(null);
+  const [isDeepCityScanning, setIsDeepCityScanning] = useState(false);
 
   const loadVisibilityData = async () => {
     if (!activeFilm?.id) return;
     try {
       setLoading(true);
-      const data = await dbService.getLatestVisibilityScan(activeFilm.id);
+      const [data, historyData, showtimeData] = await Promise.all([
+        dbService.getLatestVisibilityScan(activeFilm.id),
+        dbService.getVisibilityHistory(activeFilm.id),
+        dbService.getLatestShowtimeSnapshot(activeFilm.id)
+      ]);
       if (data) {
         setLatestScan(data);
         const lastScanDate = new Date(data.lastScanAt);
@@ -26,14 +33,13 @@ export function useVisibilityTracker(activeFilm: Film | null) {
         if (diff < fourHoursInMs) {
           setCooldown(Math.ceil((fourHoursInMs - diff) / 1000));
         } else {
-          setCooldown(null); 
+          setCooldown(null);
         }
       } else {
-        setCooldown(null); 
+        setCooldown(null);
       }
-      
-      const historyData = await dbService.getVisibilityHistory(activeFilm.id);
       setHistory(historyData || []);
+      setLatestShowtime(showtimeData);
     } catch (err) {
       console.error("Error loading visibility data:", err);
     } finally {
@@ -84,15 +90,38 @@ export function useVisibilityTracker(activeFilm: Film | null) {
         console.warn("No mediaUniverse found in AudienceDNA — visibility scan will fall back to AI-estimated mediaHits. Re-run AudienceDNA to populate media universe.");
       }
 
-      // 2. Perform Gemini Scan with real data sources + grounded context
-      const result = await performVisibilityScan(
-        activeFilm as any,
-        benchmark || undefined,
-        audienceDNA || undefined,
-        crawlContextResult
-      );
+      // 2. Perform Gemini Scan with real data sources + grounded context.
+      // 3. In parallel, fetch showtime snapshot (default mode = Jakarta only, 1 Firecrawl call).
+      const releaseYear = activeFilm.releaseDate
+        ? new Date(activeFilm.releaseDate).getFullYear()
+        : new Date().getFullYear();
+
+      const [result, showtimeResp] = await Promise.all([
+        performVisibilityScan(
+          activeFilm as any,
+          benchmark || undefined,
+          audienceDNA || undefined,
+          crawlContextResult
+        ),
+        apiClient.post<any>('/api/showtimes', {
+          title: activeFilm.title,
+          releaseYear,
+          releaseDate: activeFilm.releaseDate,
+          mode: 'default'
+        }).catch(err => {
+          console.warn("Showtime fetch failed:", err);
+          return null;
+        })
+      ]);
+
       await dbService.saveVisibilityScan(activeFilm.id, result);
-      
+
+      if (showtimeResp && !showtimeResp.error) {
+        await dbService.saveShowtimeSnapshot(activeFilm.id, showtimeResp);
+        const refreshedShowtime = await dbService.getLatestShowtimeSnapshot(activeFilm.id);
+        setLatestShowtime(refreshedShowtime);
+      }
+
       setLatestScan(result);
       setHistory(prev => [result, ...prev]);
       setCooldown(4 * 3600);
@@ -102,6 +131,34 @@ export function useVisibilityTracker(activeFilm: Film | null) {
     } finally {
       setLoading(false);
       setIsAutoScanning(false);
+    }
+  };
+
+  const handleDeepCityScan = async () => {
+    if (!activeFilm) return;
+    setIsDeepCityScanning(true);
+    setError(null);
+    try {
+      const releaseYear = activeFilm.releaseDate
+        ? new Date(activeFilm.releaseDate).getFullYear()
+        : new Date().getFullYear();
+      const showtimeResp = await apiClient.post<any>('/api/showtimes', {
+        title: activeFilm.title,
+        releaseYear,
+        releaseDate: activeFilm.releaseDate,
+        mode: 'deep'
+      });
+      if (showtimeResp && !showtimeResp.error) {
+        await dbService.saveShowtimeSnapshot(activeFilm.id, showtimeResp);
+        const refreshedShowtime = await dbService.getLatestShowtimeSnapshot(activeFilm.id);
+        setLatestShowtime(refreshedShowtime);
+      } else {
+        setError(showtimeResp?.error || "Deep city scan returned no data.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Deep city scan failed.");
+    } finally {
+      setIsDeepCityScanning(false);
     }
   };
 
@@ -129,8 +186,11 @@ export function useVisibilityTracker(activeFilm: Film | null) {
     cooldown,
     isAutoScanning,
     isBackfilling,
+    latestShowtime,
+    isDeepCityScanning,
     handleDeepScan,
     handleBackfill,
+    handleDeepCityScan,
     loadVisibilityData
   };
 }

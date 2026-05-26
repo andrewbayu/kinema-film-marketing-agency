@@ -25,6 +25,7 @@ import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { useVisibilityTracker } from '../hooks/useVisibilityTracker';
 import { MetricCard } from '../components/visibility/MetricCard';
 import { InfoTooltip } from '../components/ui/InfoTooltip';
+import { ShowtimePanel } from '../components/visibility/ShowtimePanel';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -61,8 +62,11 @@ export default function VisibilityTracker() {
     cooldown,
     isAutoScanning,
     isBackfilling,
+    latestShowtime,
+    isDeepCityScanning,
     handleDeepScan,
-    handleBackfill
+    handleBackfill,
+    handleDeepCityScan
   } = useVisibilityTracker(activeFilm);
 
   const [timeRange, setTimeRange] = useState<'4H' | '1D' | '1W'>('1D');
@@ -484,6 +488,13 @@ export default function VisibilityTracker() {
                 </div>
               </div>
             )}
+
+            {/* Showtime Allocation Panel (jadwalnonton.com) */}
+            <ShowtimePanel
+              snapshot={latestShowtime}
+              isDeepCityScanning={isDeepCityScanning}
+              onDeepCityScan={handleDeepCityScan}
+            />
 
             {/* Grounding Evidence: Transparency Log */}
             <div className="bg-black-1 border border-border-subtle rounded-card p-8">

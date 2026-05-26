@@ -44,6 +44,23 @@ service cloud.firestore {
           && (data.get('releaseDate', null) == null || (data.releaseDate is string && data.releaseDate.size() <= 64));
     }
 
+    function isValidShowtime(data) {
+      return (data.userId == request.auth.uid || isAdmin())
+          && data.campaignId is string && data.campaignId.size() <= 128
+          && data.filmUrl is string && data.filmUrl.size() <= 500
+          && data.totalShows is number
+          && data.totalCinemas is number
+          && data.totalCities is number
+          && data.byCity is list
+          && data.byChain is list
+          && data.byFormat is list
+          && data.byTier is map
+          && data.shows is list
+          && data.scanMode is string
+          && data.phase is string
+          && data.createdAt is timestamp;
+    }
+
     function isValidVisibility(data) {
       return (data.userId == request.auth.uid || isAdmin())
           && data.campaignId is string && data.campaignId.size() <= 128
@@ -98,11 +115,21 @@ service cloud.firestore {
 
     match /visibility_tracker/{scanId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() 
+      allow create: if isSignedIn()
                      && isValidVisibility(incoming())
                      && (isAdmin() || isCampaignOwner(incoming().campaignId))
                      && (incoming().createdAt == request.time || (isAdmin() && incoming().createdAt <= request.time));
-      allow update: if false; 
+      allow update: if false;
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /showtime_snapshots/{snapshotId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+                     && isValidShowtime(incoming())
+                     && (isAdmin() || isCampaignOwner(incoming().campaignId))
+                     && incoming().createdAt == request.time;
+      allow update: if false;
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 

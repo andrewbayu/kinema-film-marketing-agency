@@ -15,15 +15,16 @@ import {
   limit
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { 
-  AudienceDNAResult, 
-  BoxPredictResult, 
-  FilmProfileInput, 
-  BoxPredictInput, 
-  CineForgeResult, 
+import {
+  AudienceDNAResult,
+  BoxPredictResult,
+  FilmProfileInput,
+  BoxPredictInput,
+  CineForgeResult,
   VisibilityTrackerResult,
   FIBResult,
-  Film
+  Film,
+  ShowtimeSnapshot
 } from '../lib/types';
 import { OperationType, handleFirestoreError } from './dbBase';
 
@@ -288,6 +289,63 @@ export const dbService = {
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  // Showtime Snapshots
+  async saveShowtimeSnapshot(campaignId: string, snapshot: Omit<ShowtimeSnapshot, 'campaignId' | 'userId' | 'velocity'>) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) throw new Error("Auth required");
+
+    const path = 'showtime_snapshots';
+    try {
+      // Compute velocity vs previous snapshot
+      const previous = await getLatestByCampaignId<ShowtimeSnapshot>(path, campaignId);
+      const velocity = previous && previous.totalShows > 0
+        ? Math.round(((snapshot.totalShows - previous.totalShows) / previous.totalShows) * 100)
+        : 0;
+
+      await addDoc(collection(db, path), {
+        ...snapshot,
+        campaignId,
+        userId,
+        velocity,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async getLatestShowtimeSnapshot(campaignId: string): Promise<ShowtimeSnapshot | null> {
+    const data = await getLatestByCampaignId<any>('showtime_snapshots', campaignId);
+    if (!data) return null;
+    return {
+      ...data,
+      scannedAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.scannedAt
+    } as ShowtimeSnapshot;
+  },
+
+  async getShowtimeHistory(campaignId: string, days: number = 30): Promise<ShowtimeSnapshot[]> {
+    const path = 'showtime_snapshots';
+    try {
+      const q = query(
+        collection(db, path),
+        where('campaignId', '==', campaignId),
+        orderBy('createdAt', 'desc'),
+        limit(days)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          ...data,
+          scannedAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.scannedAt
+        } as ShowtimeSnapshot;
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
     }
   }
 };
