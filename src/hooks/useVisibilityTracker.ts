@@ -14,16 +14,18 @@ export function useVisibilityTracker(activeFilm: Film | null) {
   const [isAutoScanning, setIsAutoScanning] = useState(false);
   const [isBackfilling, setIsBackfilling] = useState(false);
   const [latestShowtime, setLatestShowtime] = useState<ShowtimeSnapshot | null>(null);
+  const [showtimeHistory, setShowtimeHistory] = useState<ShowtimeSnapshot[]>([]);
   const [isDeepCityScanning, setIsDeepCityScanning] = useState(false);
 
   const loadVisibilityData = async () => {
     if (!activeFilm?.id) return;
     try {
       setLoading(true);
-      const [data, historyData, showtimeData] = await Promise.all([
+      const [data, historyData, showtimeData, showtimeHist] = await Promise.all([
         dbService.getLatestVisibilityScan(activeFilm.id),
         dbService.getVisibilityHistory(activeFilm.id),
-        dbService.getLatestShowtimeSnapshot(activeFilm.id)
+        dbService.getLatestShowtimeSnapshot(activeFilm.id),
+        dbService.getShowtimeHistory(activeFilm.id, 30)
       ]);
       if (data) {
         setLatestScan(data);
@@ -40,6 +42,7 @@ export function useVisibilityTracker(activeFilm: Film | null) {
       }
       setHistory(historyData || []);
       setLatestShowtime(showtimeData);
+      setShowtimeHistory(showtimeHist || []);
     } catch (err) {
       console.error("Error loading visibility data:", err);
     } finally {
@@ -118,8 +121,12 @@ export function useVisibilityTracker(activeFilm: Film | null) {
 
       if (showtimeResp && !showtimeResp.error) {
         await dbService.saveShowtimeSnapshot(activeFilm.id, showtimeResp);
-        const refreshedShowtime = await dbService.getLatestShowtimeSnapshot(activeFilm.id);
+        const [refreshedShowtime, refreshedHistory] = await Promise.all([
+          dbService.getLatestShowtimeSnapshot(activeFilm.id),
+          dbService.getShowtimeHistory(activeFilm.id, 30)
+        ]);
         setLatestShowtime(refreshedShowtime);
+        setShowtimeHistory(refreshedHistory || []);
       }
 
       setLatestScan(result);
@@ -150,8 +157,12 @@ export function useVisibilityTracker(activeFilm: Film | null) {
       });
       if (showtimeResp && !showtimeResp.error) {
         await dbService.saveShowtimeSnapshot(activeFilm.id, showtimeResp);
-        const refreshedShowtime = await dbService.getLatestShowtimeSnapshot(activeFilm.id);
+        const [refreshedShowtime, refreshedHistory] = await Promise.all([
+          dbService.getLatestShowtimeSnapshot(activeFilm.id),
+          dbService.getShowtimeHistory(activeFilm.id, 30)
+        ]);
         setLatestShowtime(refreshedShowtime);
+        setShowtimeHistory(refreshedHistory || []);
       } else {
         setError(showtimeResp?.error || "Deep city scan returned no data.");
       }
@@ -187,6 +198,7 @@ export function useVisibilityTracker(activeFilm: Film | null) {
     isAutoScanning,
     isBackfilling,
     latestShowtime,
+    showtimeHistory,
     isDeepCityScanning,
     handleDeepScan,
     handleBackfill,

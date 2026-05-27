@@ -63,6 +63,7 @@ export default function VisibilityTracker() {
     isAutoScanning,
     isBackfilling,
     latestShowtime,
+    showtimeHistory,
     isDeepCityScanning,
     handleDeepScan,
     handleBackfill,
@@ -566,6 +567,8 @@ export default function VisibilityTracker() {
             {/* Showtime Allocation Panel (jadwalnonton.com) */}
             <ShowtimePanel
               snapshot={latestShowtime}
+              history={showtimeHistory}
+              filmTitle={activeFilm.title}
               isDeepCityScanning={isDeepCityScanning}
               onDeepCityScan={handleDeepCityScan}
             />

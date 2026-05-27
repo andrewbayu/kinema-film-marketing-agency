@@ -10,6 +10,12 @@ import {
   MediaSource
 } from './types';
 import { KINEMA_SYSTEM_PROMPT, CINEFORGE_PROMPT } from './prompts';
+import { ShowtimeDeltaView } from './showtimeDeltas';
+
+export interface ShowtimeDeltaSummary {
+  points: string[]; // exactly 3 short bullets in Bahasa Indonesia
+  generatedAt: string;
+}
 
 import { apiClient } from '../services/apiClient';
 
@@ -616,5 +622,71 @@ export async function performVisibilityScan(
       }
     },
     evidencePoints
+  };
+}
+
+export async function generateShowtimeSummary(
+  filmTitle: string,
+  delta: ShowtimeDeltaView
+): Promise<ShowtimeDeltaSummary> {
+  if (!delta.hasComparison) {
+    throw new Error('Butuh minimal 2 snapshot dari hari berbeda untuk generate summary.');
+  }
+
+  const topGainersStr = delta.topGainers.length
+    ? delta.topGainers.map(c => `${c.city} (+${c.delta} show, ${c.previousCount}→${c.currentCount})`).join(', ')
+    : 'tidak ada';
+  const topLosersStr = delta.topLosers.length
+    ? delta.topLosers.map(c => `${c.city} (${c.delta} show, ${c.previousCount}→${c.currentCount})`).join(', ')
+    : 'tidak ada';
+
+  // Significant cinema-level movers across all cities — surface top ±5 by absolute delta
+  const allCinemaDeltas = Object.values(delta.cinemasByCity).flat();
+  const cinemaMovers = allCinemaDeltas
+    .filter(c => Math.abs(c.delta) >= 2)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 5)
+    .map(c => `${c.cinema} (${c.city}, ${c.delta > 0 ? '+' : ''}${c.delta})`)
+    .join('; ') || 'tidak ada pergerakan signifikan';
+
+  const prompt = `
+${KINEMA_SYSTEM_PROMPT}
+
+Tugasmu: berikan ringkasan eksekutif 3 poin atas perubahan alokasi showtime film "${filmTitle}" dari ${delta.gapLabel} (${delta.previousSnapshot?.scannedAt}) ke snapshot terbaru (${delta.currentSnapshot.scannedAt}).
+
+DATA PERUBAHAN:
+- Total shows: ${delta.previousSnapshot?.totalShows} → ${delta.currentSnapshot.totalShows} (${delta.totalDelta > 0 ? '+' : ''}${delta.totalDelta} show, ${delta.totalDeltaPct > 0 ? '+' : ''}${delta.totalDeltaPct}%)
+- Gap hari: ${delta.gapDays} hari
+- Top gainers (kota): ${topGainersStr}
+- Top losers (kota): ${topLosersStr}
+- Cinema movers signifikan: ${cinemaMovers}
+- Fase rilis: ${delta.currentSnapshot.phase}${delta.currentSnapshot.daysToRelease !== undefined ? ` (H${delta.currentSnapshot.daysToRelease > 0 ? '-' : '+'}${Math.abs(delta.currentSnapshot.daysToRelease)})` : ''}
+
+Output EXACTLY 3 poin pendek dalam Bahasa Indonesia:
+1. Poin pertama: di mana momentum naik (kota/cinema mana yang dapat tambahan show, apa interpretasinya dalam konteks demand).
+2. Poin kedua: di mana momentum turun (kota/cinema mana yang dipotong, signal apa untuk distribusi).
+3. Poin ketiga: satu rekomendasi aksi konkret untuk tim marketing (misal: realokasi spend ke kota tertentu, paid push ke kota yang baru dapat allocation, atau retain strategy di kota yang lagi naik).
+
+Aturan:
+- Setiap poin maksimal 2 kalimat.
+- Gunakan angka spesifik dari data di atas, jangan generalisasi.
+- Jika data delta menunjukkan perubahan kecil/flat, sebut secara jujur — jangan dramatisasi.
+- Jangan menyebut "kemarin" jika gap-nya bukan 1 hari — pakai label "${delta.gapLabel}".
+
+Output JSON:
+{
+  "points": ["poin 1", "poin 2", "poin 3"]
+}
+`;
+
+  const response = await generateWithRetry(prompt, { responseMimeType: 'application/json' });
+  const text = response.text || '';
+  const parsed = JSON.parse(text);
+  if (!Array.isArray(parsed.points) || parsed.points.length === 0) {
+    throw new Error('AI summary returned invalid shape.');
+  }
+  return {
+    points: parsed.points.slice(0, 3).map((p: any) => String(p)),
+    generatedAt: new Date().toISOString()
   };
 }
