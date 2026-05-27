@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Film, AudienceDNAResult, BoxPredictResult, CineForgeResult } from '../lib/types';
-import { mockFilms } from '../lib/mockData';
 
 interface FilmContextType {
   activeFilm: Film | null;
@@ -15,6 +14,13 @@ interface FilmContextType {
 
 const FilmContext = createContext<FilmContextType | undefined>(undefined);
 
+// Strip Firestore-managed fields that don't survive localStorage round-trip cleanly
+// (Timestamp objects lose their toDate method when serialized).
+function sanitizeForStorage(film: Film): Film {
+  const { createdAt, userId, lastVisibilityScan, ...rest } = film;
+  return rest as Film;
+}
+
 export function FilmProvider({ children }: { children: ReactNode }) {
   const [activeFilm, setActiveFilm] = useState<Film | null>(() => {
     const saved = localStorage.getItem('activeFilm');
@@ -25,10 +31,12 @@ export function FilmProvider({ children }: { children: ReactNode }) {
   const [cineForgeOutput, setCineForgeOutput] = useState<CineForgeResult | null>(null);
 
   const handleSetActiveFilm = (film: Film | null) => {
-    setActiveFilm(film);
     if (film) {
-      localStorage.setItem('activeFilm', JSON.stringify(film));
+      const clean = sanitizeForStorage(film);
+      setActiveFilm(clean);
+      localStorage.setItem('activeFilm', JSON.stringify(clean));
     } else {
+      setActiveFilm(null);
       localStorage.removeItem('activeFilm');
     }
   };

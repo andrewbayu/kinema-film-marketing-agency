@@ -7,7 +7,7 @@ import NewCampaignModal from '../components/modals/NewCampaignModal';
 import EditCampaignModal from '../components/modals/EditCampaignModal';
 import { dbService } from '../services/dbService';
 import { useAuth } from '../hooks/useAuth';
-import { FilmProfileInput } from '../lib/types';
+import { Film, FilmProfileInput } from '../lib/types';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,10 +21,10 @@ export default function Campaigns() {
   const [filter, setFilter] = useState<FilterType>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Film | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,32 +85,12 @@ export default function Campaigns() {
     return matchesSearch && matchesFilter;
   });
 
-  const handleFilmClick = (film: any) => {
-    // Map Firestore data to the expected Film type with all original profile fields
-    const selectedFilm = {
-      id: film.id,
-      title: film.title,
-      genre: film.genre,
-      logline: film.logline,
-      leadCast: film.leadCast,
-      director: film.director,
-      budgetTier: film.budgetTier,
-      releaseWindow: film.releaseWindow,
-      releaseDate: film.releaseDate,
-      ipType: film.ipType,
-      client: film.client || 'Internal',
-      phase: film.phase || 'Development',
-      daysToRelease: film.daysToRelease || 90,
-      reach: film.reach || '0',
-      occupancy: film.occupancy || null,
-      status: film.status || 'active',
-      progress: film.progress || 0
-    };
-    setActiveFilm(selectedFilm);
+  const handleFilmClick = (film: Film) => {
+    setActiveFilm(film);
     navigate('/'); // Go to overview for this film
   };
 
-  const handleEditClick = (e: React.MouseEvent, film: any) => {
+  const handleEditClick = (e: React.MouseEvent, film: Film) => {
     e.stopPropagation();
     setSelectedCampaign(film);
     setIsEditModalOpen(true);

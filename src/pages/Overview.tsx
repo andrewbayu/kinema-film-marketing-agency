@@ -9,12 +9,13 @@ import { useNavigate } from 'react-router-dom';
 import { dbService } from '../services/dbService';
 import { useAuth } from '../hooks/useAuth';
 import { useFilmContext } from '../hooks/useFilmContext';
+import { Film } from '../lib/types';
 
 export default function Overview() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
   const { user, loading: authLoading } = useAuth();
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,20 +41,8 @@ export default function Overview() {
     }
   };
 
-  const handleFilmClick = (film: any) => {
-    const selectedFilm = {
-      id: film.id,
-      title: film.title,
-      genre: film.genre,
-      client: 'Internal',
-      phase: film.phase || 'Development',
-      daysToRelease: film.daysToRelease || 90,
-      reach: film.reach || '0',
-      occupancy: film.occupancy || null,
-      status: film.status || 'active',
-      progress: film.progress || 0
-    };
-    setActiveFilm(selectedFilm);
+  const handleFilmClick = (film: Film) => {
+    setActiveFilm(film);
     navigate('/');
   };
 

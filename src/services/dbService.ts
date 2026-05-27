@@ -92,6 +92,47 @@ export const dbService = {
     }
   },
 
+  // Batched existence check across DNA / Box / FIB collections for a list of
+  // campaign IDs. Reduces Library page mount from 3N Firestore reads to 3
+  // queries per 30-id chunk.
+  async getCampaignReportFlags(campaignIds: string[]): Promise<Record<string, { dna: boolean; box: boolean; fib: boolean }>> {
+    if (campaignIds.length === 0) return {};
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < campaignIds.length; i += 30) {
+      chunks.push(campaignIds.slice(i, i + 30));
+    }
+
+    const presentIn = async (collectionName: string): Promise<Set<string>> => {
+      const found = new Set<string>();
+      try {
+        for (const chunk of chunks) {
+          const q = query(collection(db, collectionName), where('campaignId', 'in', chunk));
+          const snap = await getDocs(q);
+          snap.docs.forEach(d => {
+            const cid = (d.data() as any).campaignId;
+            if (cid) found.add(cid);
+          });
+        }
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, collectionName);
+      }
+      return found;
+    };
+
+    const [dna, box, fib] = await Promise.all([
+      presentIn('audience_dna'),
+      presentIn('box_predict'),
+      presentIn('fib')
+    ]);
+
+    const result: Record<string, { dna: boolean; box: boolean; fib: boolean }> = {};
+    for (const id of campaignIds) {
+      result[id] = { dna: dna.has(id), box: box.has(id), fib: fib.has(id) };
+    }
+    return result;
+  },
+
   async getCampaigns(uid?: string) {
     const userId = uid || auth.currentUser?.uid;
     console.log("Fetching campaigns for user:", userId);
@@ -109,7 +150,7 @@ export const dbService = {
       );
       const snapshot = await getDocs(q);
       console.log(`Found ${snapshot.size} campaigns for user ${userId}`);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Film));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Film);
     } catch (error) {
       console.error("Firestore getCampaigns error:", error);
       handleFirestoreError(error, OperationType.LIST, path);

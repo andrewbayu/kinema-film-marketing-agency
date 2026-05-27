@@ -1,16 +1,9 @@
 export interface Film {
   id: string;
+
+  // Profile fields (persisted to Firestore via FilmProfileInput)
   title: string;
   genre: GenreOption;
-  client: string;
-  phase: string;
-  daysToRelease: number;
-  reach: string;
-  occupancy: number | null;
-  status: 'active' | 'pre-release' | 'post';
-  progress: number;
-  alert?: string;
-  // Extended fields from Campaign profile
   logline?: string;
   leadCast?: string;
   director?: string;
@@ -18,6 +11,22 @@ export interface Film {
   releaseWindow?: string;
   ipType?: IPType;
   releaseDate?: string;
+
+  // Server-set fields (Firestore-managed)
+  userId?: string;
+  // Firestore Timestamp when live, serialized object after localStorage round-trip.
+  createdAt?: any;
+  status?: 'active' | 'pre-release' | 'post';
+  lastVisibilityScan?: any;
+
+  // Display-only / computed (not persisted)
+  client?: string;
+  phase?: string;
+  daysToRelease?: number;
+  reach?: string;
+  occupancy?: number | null;
+  progress?: number;
+  alert?: string;
 }
 
 export type BudgetTier = 'indie' | 'mid' | 'major';

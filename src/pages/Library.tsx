@@ -25,7 +25,7 @@ export default function Library() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
   const { user, loading: authLoading } = useAuth();
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [reportsMap, setReportsMap] = useState<Record<string, { dna: boolean, box: boolean, fib: boolean }>>({});
@@ -46,25 +46,13 @@ export default function Library() {
     try {
       const data = await dbService.getCampaigns(uid);
       setCampaigns(data || []);
-      
-      // Check for reports for each campaign
-      const statusMap: Record<string, { dna: boolean, box: boolean, fib: boolean }> = {};
-      
+
       if (data && data.length > 0) {
-        await Promise.all(data.map(async (c: any) => {
-          const [dna, box, fib] = await Promise.all([
-            dbService.getLatestAudienceDNA(c.id),
-            dbService.getLatestBoxPredict(c.id),
-            dbService.getLatestFIB(c.id)
-          ]);
-          statusMap[c.id] = {
-            dna: !!dna,
-            box: !!box,
-            fib: !!fib
-          };
-        }));
+        const flags = await dbService.getCampaignReportFlags(data.map(c => c.id));
+        setReportsMap(flags);
+      } else {
+        setReportsMap({});
       }
-      setReportsMap(statusMap);
     } catch (err) {
       console.error("Library fetch failed", err);
     } finally {

@@ -26,23 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (user) {
         try {
-          const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-          if (adminDoc.exists()) {
-            setIsAdmin(true);
-            setIsAuthorized(true);
-          } else {
-            const teamDoc = await getDoc(doc(db, 'team', user.email!));
-            if (teamDoc.exists()) {
-              setIsAdmin(true);
-              setIsAuthorized(true);
-            } else {
-              setIsAdmin(false);
-              const clientsRef = collection(db, 'clients');
-              const q = query(clientsRef, where('email', '==', user.email));
-              const querySnapshot = await getDocs(q);
-              setIsAuthorized(!querySnapshot.empty);
-            }
-          }
+          const [adminDoc, teamDoc, clientsSnap] = await Promise.all([
+            getDoc(doc(db, 'admins', user.uid)),
+            getDoc(doc(db, 'team', user.email!)),
+            getDocs(query(collection(db, 'clients'), where('email', '==', user.email)))
+          ]);
+          const adminOrTeam = adminDoc.exists() || teamDoc.exists();
+          setIsAdmin(adminOrTeam);
+          setIsAuthorized(adminOrTeam || !clientsSnap.empty);
         } catch (error) {
           console.error("Auth status check failed", error);
           setIsAdmin(false);

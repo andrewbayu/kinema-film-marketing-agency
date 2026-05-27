@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScenarioData } from '../../lib/types';
-import { cn, formatNumber, formatCurrency } from '../../lib/utils';
+import { cn } from '../../lib/utils';
+import { formatNumber, formatCurrency } from '../../lib/format';
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
 
 interface ScenarioCardProps {

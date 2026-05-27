@@ -20,6 +20,7 @@ import { dbService } from '../services/dbService';
 import { performVisibilityScan } from '../lib/gemini';
 import { VisibilityTrackerResult } from '../lib/types';
 import { cn } from '../lib/utils';
+import { formatBigNumber } from '../lib/format';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 import { useVisibilityTracker } from '../hooks/useVisibilityTracker';
@@ -144,18 +145,6 @@ export default function VisibilityTracker() {
       hour: '2-digit',
       minute: '2-digit'
     });
-
-  // Localized big-number formatter. Indonesian convention: 1.000 = 1RB, 1.000.000 = 1JT.
-  // `precise` adds decimals for tooltip values; ticks stay short.
-  const formatBigNumber = (val: number, precise = false) => {
-    if (val >= 1_000_000) {
-      return `${(val / 1_000_000).toFixed(precise ? 2 : 1)}JT`;
-    }
-    if (val >= 1_000) {
-      return `${(val / 1_000).toFixed(precise ? 1 : 0)}RB`;
-    }
-    return val.toLocaleString('id-ID');
-  };
 
   const trendData = getFilteredData();
   const targetReach = latestScan?.funnel?.requiredAwareness || 0;
@@ -426,9 +415,7 @@ export default function VisibilityTracker() {
                         <InfoTooltip content={METRIC_INFO.marketReach} />
                       </div>
                       <div className="text-[32px] font-black text-ink-primary font-mono leading-none">
-                        {(currentReachDisplay >= 1000000 
-                          ? `${(currentReachDisplay / 1000000).toFixed(1)}JT`
-                          : currentReachDisplay.toLocaleString('id-ID'))}
+                        {formatBigNumber(currentReachDisplay)}
                       </div>
                     </div>
                     <div className="text-right">
@@ -437,9 +424,7 @@ export default function VisibilityTracker() {
                         <InfoTooltip content={METRIC_INFO.targetReach} />
                       </div>
                       <div className="text-[14px] font-black text-ink-secondary">
-                        {((latestScan?.funnel?.requiredAwareness || 0) >= 1000000
-                          ? `${((latestScan?.funnel?.requiredAwareness || 0) / 1000000).toFixed(1)}JT`
-                          : (latestScan?.funnel?.requiredAwareness || 0).toLocaleString('id-ID'))}
+                        {formatBigNumber(latestScan?.funnel?.requiredAwareness || 0)}
                       </div>
                     </div>
                   </div>
@@ -501,9 +486,7 @@ export default function VisibilityTracker() {
                       <InfoTooltip content={METRIC_INFO.p50Admissions} />
                     </div>
                     <div className="text-[28px] font-black text-ink-primary italic">
-                      {((latestScan.funnel.p50Target || 0) >= 1000000
-                        ? `${((latestScan.funnel.p50Target || 0) / 1000000).toFixed(1)}JT`
-                        : (latestScan.funnel.p50Target || 0).toLocaleString('id-ID'))}
+                      {formatBigNumber(latestScan.funnel.p50Target || 0)}
                     </div>
                     <div className="text-[10px] text-ink-tertiary mt-1 italic">Indonesian Benchmark Entry</div>
                   </div>
@@ -511,9 +494,7 @@ export default function VisibilityTracker() {
                   <div className="bg-black-2 p-5 rounded-xl border border-border-subtle hover:border-crimson/30 transition-colors">
                     <div className="text-[10px] font-mono font-bold text-ink-tertiary uppercase mb-2">Required Reach</div>
                     <div className="text-[28px] font-black text-ink-primary italic">
-                      {((latestScan.funnel.requiredAwareness || 0) >= 1000000
-                        ? `${((latestScan.funnel.requiredAwareness || 0) / 1000000).toFixed(1)}JT`
-                        : (latestScan.funnel.requiredAwareness || 0).toLocaleString('id-ID'))}
+                      {formatBigNumber(latestScan.funnel.requiredAwareness || 0)}
                     </div>
                     <div className="text-[10px] text-green-500 font-bold mt-1">Goal for H-7 Plateau</div>
                   </div>
