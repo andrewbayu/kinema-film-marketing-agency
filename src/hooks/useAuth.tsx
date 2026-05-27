@@ -26,14 +26,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (user) {
         try {
-          const [adminDoc, teamDoc, clientsSnap] = await Promise.all([
+          const [adminDoc, teamDoc, clientUsersSnap] = await Promise.all([
             getDoc(doc(db, 'admins', user.uid)),
             getDoc(doc(db, 'team', user.email!)),
-            getDocs(query(collection(db, 'clients'), where('email', '==', user.email)))
+            // Auth allowlist for client-portal users (renamed from `clients` in
+            // Phase 1; the `clients` collection now holds Client entities).
+            getDocs(query(collection(db, 'client_users'), where('email', '==', user.email)))
           ]);
           const adminOrTeam = adminDoc.exists() || teamDoc.exists();
           setIsAdmin(adminOrTeam);
-          setIsAuthorized(adminOrTeam || !clientsSnap.empty);
+          setIsAuthorized(adminOrTeam || !clientUsersSnap.empty);
         } catch (error) {
           console.error("Auth status check failed", error);
           setIsAdmin(false);

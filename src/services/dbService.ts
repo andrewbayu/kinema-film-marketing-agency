@@ -24,7 +24,9 @@ import {
   VisibilityTrackerResult,
   FIBResult,
   Film,
-  ShowtimeSnapshot
+  ShowtimeSnapshot,
+  Client,
+  ClientProfileInput
 } from '../lib/types';
 import { OperationType, handleFirestoreError } from './dbBase';
 
@@ -64,8 +66,73 @@ async function saveResult<T>(collectionName: string, campaignId: string, results
 }
 
 export const dbService = {
-  // Campaigns
-  async createCampaign(input: FilmProfileInput) {
+  // -------------------- Clients (production house / account) --------------------
+  // Note: this collection is the new Client entity (Phase 1). The legacy auth
+  // allowlist that previously lived under `clients` has been renamed to
+  // `client_users` (see useAuth.tsx + firestore.rules). Any existing docs in the
+  // old `clients` collection should be migrated to `client_users` before deploy.
+
+  async createClient(input: ClientProfileInput) {
+    const userId = auth.currentUser?.uid;
+    if (!userId) throw new Error("Auth required");
+
+    const path = 'clients';
+    try {
+      const docRef = await addDoc(collection(db, path), {
+        ...input,
+        members: input.members ?? [],
+        userId,
+        createdAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  },
+
+  async getClients(uid?: string): Promise<Client[]> {
+    const userId = uid || auth.currentUser?.uid;
+    if (!userId) return [];
+
+    const path = 'clients';
+    try {
+      const q = query(
+        collection(db, path),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Client);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return [];
+    }
+  },
+
+  async getClient(clientId: string): Promise<Client | null> {
+    const path = 'clients';
+    try {
+      const snap = await getDoc(doc(db, path, clientId));
+      if (!snap.exists()) return null;
+      return { id: snap.id, ...snap.data() } as Client;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      return null;
+    }
+  },
+
+  async updateClient(clientId: string, updates: Partial<ClientProfileInput>) {
+    const path = 'clients';
+    try {
+      await updateDoc(doc(db, path, clientId), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
+  // -------------------- Campaigns (Films) --------------------
+
+  async createCampaign(input: FilmProfileInput & { clientId?: string }) {
     const userId = auth.currentUser?.uid;
     if (!userId) throw new Error("Auth required");
 
@@ -83,7 +150,7 @@ export const dbService = {
     }
   },
 
-  async updateCampaign(campaignId: string, updates: Partial<FilmProfileInput>) {
+  async updateCampaign(campaignId: string, updates: Partial<FilmProfileInput> & { clientId?: string }) {
     const path = 'campaigns';
     try {
       await updateDoc(doc(db, path, campaignId), updates);

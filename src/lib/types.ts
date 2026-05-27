@@ -12,6 +12,10 @@ export interface Film {
   ipType?: IPType;
   releaseDate?: string;
 
+  // Hierarchy: which Client (production house/account) owns this film.
+  // Optional during Phase 1 transition; required after data migration.
+  clientId?: string;
+
   // Server-set fields (Firestore-managed)
   userId?: string;
   // Firestore Timestamp when live, serialized object after localStorage round-trip.
@@ -28,6 +32,47 @@ export interface Film {
   progress?: number;
   alert?: string;
 }
+
+// -------------------- Client (production house / account) --------------------
+
+export type ClientType = 'production_house' | 'indie_producer' | 'studio' | 'direct';
+export type ClientEngagementType = 'project' | 'retainer';
+export type ClientRetainerDuration = '3m' | '6m' | '12m' | 'ongoing';
+export type ClientStatus = 'active' | 'paused' | 'archived';
+export type ClientUserRole = 'kinema_team' | 'client_owner' | 'client_viewer';
+
+export interface ClientMember {
+  userId: string;
+  role: ClientUserRole;
+  // Optional: restrict freelancer/contractor to specific films within this client.
+  scopedToFilmIds?: string[];
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  type: ClientType;
+  engagementType: ClientEngagementType;
+  retainerDuration?: ClientRetainerDuration;
+  status: ClientStatus;
+
+  // Internal POC for the relationship. Never surfaced to client-portal UI.
+  accountManagerId: string;
+
+  // Access roster: Kinema team + client-side users with portal access.
+  members: ClientMember[];
+
+  // Server-set
+  userId?: string;       // creator userId, used for ownership rule
+  createdAt?: any;
+}
+
+export type ClientProfileInput = Pick<
+  Client,
+  'name' | 'type' | 'engagementType' | 'retainerDuration' | 'status' | 'accountManagerId'
+> & {
+  members?: ClientMember[];
+};
 
 export type BudgetTier = 'indie' | 'mid' | 'major';
 export type IPType = 'original' | 'minor-adaptation' | 'popular-adaptation' | 'major-ip' | 'sequel';

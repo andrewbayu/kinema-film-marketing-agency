@@ -88,9 +88,28 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /clients/{clientId} {
+    // Auth allowlist for client-portal users (the people from a Client org who
+    // log in to see their dashboard). Keyed by Firestore-generated id; each doc
+    // has at least an `email` field. Renamed from the old `clients` collection
+    // in Phase 1 so that name could be repurposed for Client entities. Migrate
+    // any existing `clients` docs here before deploying.
+    match /client_users/{userId} {
       allow read: if isSignedIn() && (resource.data.email == request.auth.token.email || isAdmin());
       allow write: if isAdmin();
+    }
+
+    // Client entity: production house / studio / indie producer that Kinema
+    // works for. Owns one or more Films. See src/lib/types.ts → Client.
+    match /clients/{clientId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isSignedIn()
+                     && incoming().userId == request.auth.uid
+                     && incoming().createdAt == request.time
+                     && incoming().name is string && incoming().name.size() <= 200;
+      allow update: if (isOwner(resource.data.userId) || isAdmin())
+                     && incoming().userId == resource.data.userId
+                     && incoming().createdAt == resource.data.createdAt;
+      allow delete: if false;
     }
 
     match /admins/{adminId} {
@@ -103,10 +122,10 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidCampaign(incoming()) && incoming().createdAt == request.time;
       allow update: if (isOwner(resource.data.userId) || isAdmin()) && (
         // Action: Generic Profile Update
-        (isValidCampaign(incoming()) && 
-         incoming().userId == resource.data.userId && 
+        (isValidCampaign(incoming()) &&
+         incoming().userId == resource.data.userId &&
          incoming().createdAt == resource.data.createdAt &&
-         incoming().diff(resource.data).affectedKeys().hasOnly(['title', 'genre', 'budgetTier', 'releaseWindow', 'releaseDate', 'logline', 'leadCast', 'ipType', 'director', 'status'])) ||
+         incoming().diff(resource.data).affectedKeys().hasOnly(['title', 'genre', 'budgetTier', 'releaseWindow', 'releaseDate', 'logline', 'leadCast', 'ipType', 'director', 'status', 'clientId'])) ||
         // Action: Update Scan Timestamp
         (incoming().diff(resource.data).affectedKeys().hasOnly(['lastVisibilityScan']) && incoming().lastVisibilityScan == request.time)
       );
