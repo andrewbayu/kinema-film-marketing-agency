@@ -4,12 +4,13 @@ import ProgressBar from '../components/ui/ProgressBar';
 import { cn } from '../lib/utils';
 import { Search, Plus, Loader2, Edit2, Building2, AlertCircle } from 'lucide-react';
 import NewCampaignModal, { NewCampaignSubmitInput } from '../components/modals/NewCampaignModal';
-import EditCampaignModal from '../components/modals/EditCampaignModal';
+import EditCampaignModal, { EditCampaignSubmitInput } from '../components/modals/EditCampaignModal';
 import { dbService } from '../services/dbService';
 import { useAuth } from '../hooks/useAuth';
 import { Film, FilmProfileInput, Client } from '../lib/types';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { useNavigate } from 'react-router-dom';
+import { filmToolPath } from '../lib/routes';
 
 type FilterType = 'All' | 'active' | 'pre-release' | 'post';
 
@@ -73,7 +74,7 @@ export default function Campaigns() {
     }
   };
 
-  const handleUpdateCampaign = async (data: FilmProfileInput) => {
+  const handleUpdateCampaign = async (data: EditCampaignSubmitInput) => {
     if (!selectedCampaign) return;
     setIsUpdating(true);
     try {
@@ -121,7 +122,7 @@ export default function Campaigns() {
 
   const handleFilmClick = (film: Film) => {
     setActiveFilm(film);
-    navigate('/'); // Go to overview for this film
+    navigate(filmToolPath(film.clientId, film.id, 'audience-dna'));
   };
 
   const handleEditClick = (e: React.MouseEvent, film: Film) => {
