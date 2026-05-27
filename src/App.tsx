@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Overview from './pages/Overview';
 import Campaigns from './pages/Campaigns';
+import Clients from './pages/Clients';
 import AudienceDNA from './pages/AudienceDNA';
 import BoxPredict from './pages/BoxPredict';
 import LiveTicker from './pages/LiveTicker';
@@ -83,6 +84,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<Overview />} />
+              <Route path="clients" element={<Clients />} />
               <Route path="campaigns" element={<Campaigns />} />
               <Route path="audience-dna" element={<AudienceDNA />} />
               <Route path="box-predict" element={<BoxPredict />} />

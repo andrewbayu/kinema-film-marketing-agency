@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Film, AudienceDNAResult, BoxPredictResult, CineForgeResult } from '../lib/types';
+import { Film, Client, AudienceDNAResult, BoxPredictResult, CineForgeResult } from '../lib/types';
 
 interface FilmContextType {
+  activeClient: Client | null;
+  setActiveClient: (client: Client | null) => void;
   activeFilm: Film | null;
   setActiveFilm: (film: Film | null) => void;
   audienceDNAOutput: AudienceDNAResult | null;
@@ -16,12 +18,21 @@ const FilmContext = createContext<FilmContextType | undefined>(undefined);
 
 // Strip Firestore-managed fields that don't survive localStorage round-trip cleanly
 // (Timestamp objects lose their toDate method when serialized).
-function sanitizeForStorage(film: Film): Film {
+function sanitizeFilmForStorage(film: Film): Film {
   const { createdAt, userId, lastVisibilityScan, ...rest } = film;
   return rest as Film;
 }
 
+function sanitizeClientForStorage(client: Client): Client {
+  const { createdAt, ...rest } = client;
+  return rest as Client;
+}
+
 export function FilmProvider({ children }: { children: ReactNode }) {
+  const [activeClient, setActiveClient] = useState<Client | null>(() => {
+    const saved = localStorage.getItem('activeClient');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [activeFilm, setActiveFilm] = useState<Film | null>(() => {
     const saved = localStorage.getItem('activeFilm');
     return saved ? JSON.parse(saved) : null;
@@ -30,9 +41,26 @@ export function FilmProvider({ children }: { children: ReactNode }) {
   const [boxPredictOutput, setBoxPredictOutput] = useState<BoxPredictResult | null>(null);
   const [cineForgeOutput, setCineForgeOutput] = useState<CineForgeResult | null>(null);
 
+  const handleSetActiveClient = (client: Client | null) => {
+    if (client) {
+      const clean = sanitizeClientForStorage(client);
+      setActiveClient(clean);
+      localStorage.setItem('activeClient', JSON.stringify(clean));
+      // If activeFilm belongs to a different client, drop it — switching clients
+      // shouldn't leave stale cross-client film context.
+      if (activeFilm?.clientId && activeFilm.clientId !== client.id) {
+        setActiveFilm(null);
+        localStorage.removeItem('activeFilm');
+      }
+    } else {
+      setActiveClient(null);
+      localStorage.removeItem('activeClient');
+    }
+  };
+
   const handleSetActiveFilm = (film: Film | null) => {
     if (film) {
-      const clean = sanitizeForStorage(film);
+      const clean = sanitizeFilmForStorage(film);
       setActiveFilm(clean);
       localStorage.setItem('activeFilm', JSON.stringify(clean));
     } else {
@@ -44,6 +72,8 @@ export function FilmProvider({ children }: { children: ReactNode }) {
   return (
     <FilmContext.Provider
       value={{
+        activeClient,
+        setActiveClient: handleSetActiveClient,
         activeFilm,
         setActiveFilm: handleSetActiveFilm,
         audienceDNAOutput,

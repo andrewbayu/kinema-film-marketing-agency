@@ -1,18 +1,19 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   Timestamp,
   addDoc,
   updateDoc,
   onSnapshot,
   serverTimestamp,
-  limit
+  limit,
+  writeBatch
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import {
@@ -127,6 +128,28 @@ export const dbService = {
       await updateDoc(doc(db, path, clientId), updates);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  },
+
+  // Batch-assign campaigns to a Client. Used by the Phase 1 migration tool
+  // when the user backfills clientId onto pre-existing campaigns. Firestore
+  // batch writes commit atomically up to 500 ops; we chunk above that.
+  async assignCampaignsToClient(campaignIds: string[], clientId: string) {
+    if (campaignIds.length === 0) return;
+    const chunks: string[][] = [];
+    for (let i = 0; i < campaignIds.length; i += 400) {
+      chunks.push(campaignIds.slice(i, i + 400));
+    }
+    try {
+      for (const chunk of chunks) {
+        const batch = writeBatch(db);
+        for (const id of chunk) {
+          batch.update(doc(db, 'campaigns', id), { clientId });
+        }
+        await batch.commit();
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'campaigns');
     }
   },
 

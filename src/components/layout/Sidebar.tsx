@@ -1,19 +1,20 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Film, 
-  Users, 
-  TrendingUp, 
-  Activity, 
-  Wand2, 
-  Network, 
+import {
+  LayoutDashboard,
+  Film,
+  Users,
+  TrendingUp,
+  Activity,
+  Wand2,
+  Network,
   MessageCircle,
   Library,
   LogOut,
   Settings,
   ShieldCheck,
-  Globe
+  Globe,
+  Building2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useFilmContext } from '../../hooks/useFilmContext';
@@ -68,7 +69,7 @@ function NavItem({ to, icon: Icon, label, disabled, badge }: NavItemProps) {
 }
 
 export default function Sidebar() {
-  const { activeFilm } = useFilmContext();
+  const { activeFilm, activeClient } = useFilmContext();
   const { user, isAdmin, logout } = useAuth();
 
   return (
@@ -98,6 +99,7 @@ export default function Sidebar() {
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">WORKSPACE</div>
           <div className="space-y-1">
             <NavItem to="/" icon={LayoutDashboard} label="Overview" />
+            <NavItem to="/clients" icon={Building2} label="Clients" />
             <NavItem to="/campaigns" icon={Film} label="Campaigns" />
             <NavItem to="/library" icon={Library} label="Library" />
           </div>
@@ -123,18 +125,31 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Active Film & User Section */}
+      {/* Active Client & Film & User Section */}
       <div className="border-t border-border-subtle bg-black-2/50 divide-y divide-border-subtle">
-        {activeFilm && (
-          <div className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-               <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
-               <span className="text-[9px] font-mono font-bold text-green-kala uppercase">FILM AKTIF</span>
-            </div>
-            <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
-            <div className="text-[10px] text-ink-tertiary font-medium">
-              {activeFilm.genre} · Week 4 · T-28 days
-            </div>
+        {(activeClient || activeFilm) && (
+          <div className="p-4 space-y-3">
+            {activeClient && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="w-3 h-3 text-ink-tertiary" />
+                  <span className="text-[9px] font-mono font-bold text-ink-tertiary uppercase tracking-wider">CLIENT</span>
+                </div>
+                <div className="font-bold text-[12px] text-ink-secondary truncate">{activeClient.name}</div>
+              </div>
+            )}
+            {activeFilm && (
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
+                  <span className="text-[9px] font-mono font-bold text-green-kala uppercase">FILM AKTIF</span>
+                </div>
+                <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
+                <div className="text-[10px] text-ink-tertiary font-medium">
+                  {activeFilm.genre} · Week 4 · T-28 days
+                </div>
+              </div>
+            )}
           </div>
         )}
 
