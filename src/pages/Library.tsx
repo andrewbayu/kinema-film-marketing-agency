@@ -2,17 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { dbService } from '../services/dbService';
 import { Film } from '../lib/types';
-import { 
-  Library as LibraryIcon, 
-  Search, 
-  ChevronRight, 
-  Users, 
-  TrendingUp, 
-  FileText, 
+import {
+  Library as LibraryIcon,
+  Search,
+  ChevronRight,
+  Users,
+  TrendingUp,
+  FileText,
   Clock,
   ExternalLink,
-  Calendar,
-  Filter
+  Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -86,20 +85,15 @@ export default function Library() {
           <p className="text-ink-tertiary text-sm">Access and manage all generated intelligence reports per campaign.</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-tertiary" />
-            <input 
-              type="text" 
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-black-3 border border-border-default rounded-md text-sm focus:border-crimson outline-none w-64"
-            />
-          </div>
-          <button className="p-2 bg-black-3 border border-border-default rounded-md hover:border-border-strong transition-colors">
-            <Filter className="w-4 h-4 text-ink-secondary" />
-          </button>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-tertiary" />
+          <input
+            type="text"
+            placeholder="Search campaigns..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 bg-black-3 border border-border-default rounded-md text-sm focus:border-crimson outline-none w-64"
+          />
         </div>
       </div>
 
