@@ -7,6 +7,112 @@ does NOT travel — put anything that should persist across machines here.)
 For product overview, stack, and full setup, see `README.md`. This file is the
 "where are we / what's next" log, not a duplicate of the README.
 
+---
+
+## PENDING ACTIONS — Phase 1c not yet merged (as of 2026-05-28)
+
+These are the open steps Andrew has NOT done yet. Work top to bottom. Delete a
+checkbox once done; delete this whole section once Phase 1c is merged + synced.
+
+Branch with all the work: `worktree-phase-1c-client-hierarchy` (fully pushed to
+origin; latest commit is the one adding this file).
+
+### 1. (Optional but recommended) Smoke-test locally first
+
+```
+git fetch origin
+git checkout worktree-phase-1c-client-hierarchy
+npm install          # node_modules is gitignored — needed on a fresh clone
+npm run dev          # needs .env present (see Run / dev gotchas below)
+```
+Open http://localhost:3000 and verify:
+- [ ] Click a film in Campaigns → URL becomes `/clients/<clientId>/films/<filmId>/audience-dna`
+- [ ] Refresh that deep URL → page still loads (does NOT bounce to home); activeClient + activeFilm rehydrate
+- [ ] Back/forward across tools (AudienceDNA ↔ BoxPredict ↔ etc.) keeps the same film
+- [ ] Sidebar dropdown under "CLIENT" → switch client → a film from a different client clears
+- [ ] Campaigns + Library + Overview show films grouped under client-name headers (Unassigned last)
+- [ ] Edit a film → Client dropdown appears at top of the modal → changing it moves the film to another client on save
+- [ ] Legacy flat route `/audience-dna` still loads (uses activeFilm from context)
+
+If anything breaks: fix on the SAME branch, commit, push. Don't start a new branch.
+
+### 2. Open the Pull Request
+
+`gh` CLI is NOT installed locally, so open it in the browser:
+
+URL: https://github.com/andrewbayu/kinema-film-marketing-agency/pull/new/worktree-phase-1c-client-hierarchy
+
+- Base branch: `main`  ·  Compare branch: `worktree-phase-1c-client-hierarchy`
+- Title: `Phase 1c — film-scoped URLs, switcher, grouping, reassign`
+- Body (paste this):
+
+```markdown
+## Summary
+Closes Phase 1b deferred items so the Client→Film hierarchy is first-class.
+
+- URL routing /clients/:clientId/films/:filmId/<tool> — new FilmRouteSync layout
+  makes the URL the source of truth. Legacy flat routes kept for back-compat.
+- Sidebar client-switcher dropdown (replaces the read-only ACTIVE CLIENT block).
+  Tool nav links resolve to film-scoped URLs when a film is active.
+- Library + Overview grouped by Client (mirrors Campaigns; Overview groups the
+  top-5 slice).
+- Reassign film via EditCampaignModal client picker.
+
+New: src/lib/routes.ts (URL builders), src/components/layout/FilmRouteSync.tsx.
+Also adds scripts/migrate-clients-to-client-users.ts (one-off; not needed now).
+
+## Verified
+- tsc --noEmit clean, vite build succeeds.
+
+## Pre-merge / pre-deploy checklist
+- [ ] Browser smoke-test: deep-link refresh, back/forward across tools, sidebar
+      switcher (incl. cross-client film clearing), reassign flow, grouped headers.
+- [x] Firestore `clients`→`client_users` migration: NOT needed — no non-team
+      portal users have ever signed in (confirmed 2026-05-28). The script is in
+      the repo only for if that changes later.
+```
+
+- Click **Create pull request**.
+
+### 3. Merge
+
+On the PR page:
+- [ ] Click **Merge pull request** → **Confirm merge**
+- [ ] (Optional) **Delete branch** to clean up the remote branch
+
+After merge, Vercel auto-deploys from `main` (if that hookup is configured) and
+the new code goes live.
+
+### 4. Sync local `main` (every machine you use)
+
+```
+git checkout main
+git pull
+```
+
+Note: on the Mac, local `main` is currently 1 commit ahead of origin/main (a
+leftover fast-forward that was never pushed — it's a duplicate of what's on the
+branch, harmless). After the PR merges, `git pull` reconciles it. If git
+complains about divergence, `git reset --hard origin/main` on `main` is safe
+here because the work is preserved on the merged branch — but ONLY do that with
+Andrew's say-so.
+
+### 5. Moving to the Windows PC
+
+All code is on GitHub, so just clone there:
+```
+git clone git@github.com:andrewbayu/kinema-film-marketing-agency.git
+cd kinema-film-marketing-agency
+git checkout worktree-phase-1c-client-hierarchy   # or `main` after the PR merges
+npm install
+```
+Then recreate `.env` by hand (it is gitignored — copy the values from the Mac's
+`.env`): `GEMINI_API_KEY`, `FIRECRAWL_API_KEY`, and the Firebase client config.
+Then `npm run dev`. Do NOT copy the git *worktree* across machines — it's
+machine-specific; just `git checkout` the branch directly on Windows.
+
+---
+
 ## Run / dev gotchas
 
 - `npm run dev` needs a `.env` file (gitignored, so NOT in the repo). Required:
