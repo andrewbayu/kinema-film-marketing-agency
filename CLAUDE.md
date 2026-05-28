@@ -15,9 +15,26 @@ These are the open steps Andrew has NOT done yet. Work top to bottom. Delete a
 checkbox once done; delete this whole section once Phase 1c is merged + synced.
 
 Branch with all the work: `worktree-phase-1c-client-hierarchy` (fully pushed to
-origin; latest commit is the one adding this file).
+origin).
 
-### 1. (Optional but recommended) Smoke-test locally first
+> **STATUS UPDATE — 2026-05-28, later (Windows PC session):**
+> Verified the fresh Windows clone is healthy — `tsc --noEmit` clean and `npm run
+> dev` boots on localhost:3000. Andrew **chose to SKIP the manual browser
+> smoke-test** (step 1 below) and go straight to the PR. So the **immediate next
+> action is step 2 — create the PR** — but he had to leave before doing it, and is
+> **continuing on the MacBook.**
+>
+> **On the Mac, do this first:**
+> ```
+> git checkout worktree-phase-1c-client-hierarchy
+> git pull            # fast-forwards to pick up this CLAUDE.md update
+> ```
+> The Mac already has node_modules + `.env`, so no reinstall needed (unless `git
+> pull` warns the type-check is red — see the firebase-admin note in Run / dev
+> gotchas). Then go to **step 2**. Step 1 is optional; run it only if you want the
+> manual click-through before merging.
+
+### 1. (Optional — DEFERRED by choice on 2026-05-28) Smoke-test locally first
 
 ```
 git fetch origin
@@ -121,6 +138,12 @@ machine-specific; just `git checkout` the branch directly on Windows.
   When moving to a new machine, recreate `.env` by hand.
 - `npm run lint` = `tsc --noEmit` (type-check, no separate test suite).
 - After cloning on a new machine: `npm install` (node_modules is gitignored).
+- **Fresh-clone gotcha (seen on Windows 2026-05-28):** if `npm run lint` fails
+  with `Cannot find module 'firebase-admin/...'` errors, they're ALL in
+  `scripts/migrate-clients-to-client-users.ts` (a one-off, not part of the app).
+  Cause: the first `npm install` didn't pull `firebase-admin` (a devDependency).
+  Fix: just re-run `npm install` — it's not a real regression. The app itself
+  type-checks fine without it.
 
 ## Architecture quick map
 
