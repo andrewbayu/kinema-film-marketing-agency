@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+# Firebase admin service-account keys (used by scripts/). Never commit.
+service-account*.json
+*-service-account.json

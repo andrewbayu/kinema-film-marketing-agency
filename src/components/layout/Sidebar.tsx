@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,11 +14,17 @@ import {
   Settings,
   ShieldCheck,
   Globe,
-  Building2
+  Building2,
+  ChevronsUpDown,
+  Check,
+  X
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useFilmContext } from '../../hooks/useFilmContext';
 import { useAuth } from '../../hooks/useAuth';
+import { filmToolPath, FilmTool } from '../../lib/routes';
+import { dbService } from '../../services/dbService';
+import { Client } from '../../lib/types';
 
 interface NavItemProps {
   to: string;
@@ -69,8 +75,32 @@ function NavItem({ to, icon: Icon, label, disabled, badge }: NavItemProps) {
 }
 
 export default function Sidebar() {
-  const { activeFilm, activeClient } = useFilmContext();
+  const { activeFilm, activeClient, setActiveClient } = useFilmContext();
   const { user, isAdmin, logout } = useAuth();
+
+  const [clients, setClients] = useState<Client[]>([]);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const switcherRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) { setClients([]); return; }
+    dbService.getClients(user.uid).then(setClients).catch(() => setClients([]));
+    // Re-fetch when activeClient changes — catches the create+activate flow on /clients.
+  }, [user, activeClient?.id]);
+
+  useEffect(() => {
+    if (!switcherOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!switcherRef.current?.contains(e.target as Node)) setSwitcherOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [switcherOpen]);
+
+  // Tool links resolve to /clients/:clientId/films/:filmId/<tool> when a film
+  // is active, else fall back to the flat legacy routes.
+  const toolHref = (tool: FilmTool): string =>
+    activeFilm ? filmToolPath(activeFilm.clientId, activeFilm.id, tool) : `/${tool}`;
 
   return (
     <aside className="w-[220px] fixed inset-y-0 left-0 bg-black-3 border-r border-border-subtle flex flex-col z-40">
@@ -108,17 +138,17 @@ export default function Sidebar() {
         <div>
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">INTELLIGENCE</div>
           <div className="space-y-1">
-            <NavItem to="/audience-dna" icon={Users} label="AudienceDNA™" />
-            <NavItem to="/box-predict" icon={TrendingUp} label="BoxPredict™" />
-            <NavItem to="/visibility-tracker" icon={Globe} label="Visibility Tracker™" />
-            <NavItem to="/live-ticker" icon={Activity} label="Live Ticker" />
+            <NavItem to={toolHref('audience-dna')} icon={Users} label="AudienceDNA™" />
+            <NavItem to={toolHref('box-predict')} icon={TrendingUp} label="BoxPredict™" />
+            <NavItem to={toolHref('visibility-tracker')} icon={Globe} label="Visibility Tracker™" />
+            <NavItem to={toolHref('live-ticker')} icon={Activity} label="Live Ticker" />
           </div>
         </div>
 
         <div>
           <div className="px-3 mb-2 text-[10px] font-mono font-bold text-ink-tertiary uppercase tracking-widest">PRODUCTION</div>
           <div className="space-y-1">
-             <NavItem to="/cineforge" icon={Wand2} label="CineForge™" />
+             <NavItem to={toolHref('cineforge')} icon={Wand2} label="CineForge™" />
              <NavItem to="/stargraph" icon={Network} label="StarGraph™" disabled badge="soon" />
              <NavItem to="/fanconvo" icon={MessageCircle} label="FanConvo™" disabled badge="soon" />
           </div>
@@ -127,31 +157,71 @@ export default function Sidebar() {
 
       {/* Active Client & Film & User Section */}
       <div className="border-t border-border-subtle bg-black-2/50 divide-y divide-border-subtle">
-        {(activeClient || activeFilm) && (
-          <div className="p-4 space-y-3">
-            {activeClient && (
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Building2 className="w-3 h-3 text-ink-tertiary" />
-                  <span className="text-[9px] font-mono font-bold text-ink-tertiary uppercase tracking-wider">CLIENT</span>
-                </div>
-                <div className="font-bold text-[12px] text-ink-secondary truncate">{activeClient.name}</div>
-              </div>
-            )}
-            {activeFilm && (
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
-                  <span className="text-[9px] font-mono font-bold text-green-kala uppercase">FILM AKTIF</span>
-                </div>
-                <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
-                <div className="text-[10px] text-ink-tertiary font-medium">
-                  {activeFilm.genre} · Week 4 · T-28 days
-                </div>
+        <div className="p-4 space-y-3">
+          {/* Client switcher */}
+          <div ref={switcherRef} className="relative">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="w-3 h-3 text-ink-tertiary" />
+              <span className="text-[9px] font-mono font-bold text-ink-tertiary uppercase tracking-wider">CLIENT</span>
+            </div>
+            <button
+              onClick={() => setSwitcherOpen(o => !o)}
+              disabled={clients.length === 0}
+              className={cn(
+                'w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md border transition-colors text-left',
+                clients.length === 0
+                  ? 'border-border-subtle text-ink-tertiary cursor-not-allowed'
+                  : 'border-border-subtle hover:border-border-default hover:bg-white/5'
+              )}
+            >
+              <span className={cn('text-[12px] font-bold truncate', activeClient ? 'text-ink-primary' : 'text-ink-tertiary italic')}>
+                {activeClient ? activeClient.name : (clients.length === 0 ? 'No clients yet' : 'All clients')}
+              </span>
+              {clients.length > 0 && <ChevronsUpDown className="w-3 h-3 text-ink-tertiary shrink-0" />}
+            </button>
+
+            {switcherOpen && clients.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-black-4 border border-border-default rounded-md shadow-2xl max-h-72 overflow-y-auto z-50">
+                <button
+                  onClick={() => { setActiveClient(null); setSwitcherOpen(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-ink-secondary hover:bg-white/5 transition-colors border-b border-border-subtle"
+                >
+                  <X className="w-3 h-3 text-ink-tertiary" />
+                  <span className="italic text-ink-tertiary">Clear (All clients)</span>
+                </button>
+                {clients.map(c => {
+                  const isActive = activeClient?.id === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => { setActiveClient(c); setSwitcherOpen(false); }}
+                      className={cn(
+                        'w-full flex items-center justify-between gap-2 px-3 py-2 text-[12px] hover:bg-white/5 transition-colors',
+                        isActive ? 'bg-crimson-surface text-ink-primary' : 'text-ink-secondary'
+                      )}
+                    >
+                      <span className="truncate text-left">{c.name}</span>
+                      {isActive && <Check className="w-3 h-3 text-crimson shrink-0" />}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
-        )}
+
+          {activeFilm && (
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-kala animate-pulse-dot" />
+                <span className="text-[9px] font-mono font-bold text-green-kala uppercase">FILM AKTIF</span>
+              </div>
+              <div className="font-bold text-[14px] text-ink-primary mb-0.5 truncate">{activeFilm.title}</div>
+              <div className="text-[10px] text-ink-tertiary font-medium">
+                {activeFilm.genre} · Week 4 · T-28 days
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="p-4 space-y-3">
           {user && (

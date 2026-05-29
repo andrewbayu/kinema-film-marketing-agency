@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { FilmProvider } from './hooks/useFilmContext';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import DashboardLayout from './components/layout/DashboardLayout';
+import FilmRouteSync from './components/layout/FilmRouteSync';
 import Overview from './pages/Overview';
 import Campaigns from './pages/Campaigns';
 import Clients from './pages/Clients';
@@ -86,12 +87,26 @@ export default function App() {
               <Route index element={<Overview />} />
               <Route path="clients" element={<Clients />} />
               <Route path="campaigns" element={<Campaigns />} />
+              <Route path="library" element={<Library />} />
+
+              {/* Film-scoped routes — URL is canonical, hydrates activeClient+activeFilm. */}
+              <Route path="clients/:clientId/films/:filmId" element={<FilmRouteSync />}>
+                <Route index element={<Navigate to="audience-dna" replace />} />
+                <Route path="audience-dna" element={<AudienceDNA />} />
+                <Route path="box-predict" element={<BoxPredict />} />
+                <Route path="visibility-tracker" element={<VisibilityTracker />} />
+                <Route path="live-ticker" element={<LiveTicker />} />
+                <Route path="cineforge" element={<CineForge />} />
+                <Route path="fib" element={<FIBGenerator />} />
+              </Route>
+
+              {/* Legacy flat routes — still work, read activeFilm from context.
+                  Kept for back-compat with bookmarks and sidebar fallback. */}
               <Route path="audience-dna" element={<AudienceDNA />} />
               <Route path="box-predict" element={<BoxPredict />} />
               <Route path="visibility-tracker" element={<VisibilityTracker />} />
               <Route path="live-ticker" element={<LiveTicker />} />
               <Route path="cineforge" element={<CineForge />} />
-              <Route path="library" element={<Library />} />
               <Route path="fib/:filmId" element={<FIBGenerator />} />
             </Route>
             <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

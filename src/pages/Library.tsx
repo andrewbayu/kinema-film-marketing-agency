@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFilmContext } from '../hooks/useFilmContext';
 import { dbService } from '../services/dbService';
-import { Film } from '../lib/types';
+import { Film, Client } from '../lib/types';
 import {
   Library as LibraryIcon,
   Search,
@@ -11,12 +11,14 @@ import {
   FileText,
   Clock,
   ExternalLink,
-  Calendar
+  Calendar,
+  Building2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
+import { filmToolPath, FilmTool } from '../lib/routes';
 
 import { useAuth } from '../hooks/useAuth';
 
@@ -25,6 +27,7 @@ export default function Library() {
   const { setActiveFilm } = useFilmContext();
   const { user, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<Film[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [reportsMap, setReportsMap] = useState<Record<string, { dna: boolean, box: boolean, fib: boolean }>>({});
@@ -43,8 +46,12 @@ export default function Library() {
   const fetchData = async (uid?: string) => {
     setLoading(true);
     try {
-      const data = await dbService.getCampaigns(uid);
+      const [data, clientList] = await Promise.all([
+        dbService.getCampaigns(uid),
+        dbService.getClients(uid)
+      ]);
       setCampaigns(data || []);
+      setClients(clientList || []);
 
       if (data && data.length > 0) {
         const flags = await dbService.getCampaignReportFlags(data.map(c => c.id));
@@ -59,19 +66,36 @@ export default function Library() {
     }
   };
 
-  const handleNavigateToReport = (film: Film, route: string) => {
+  const handleNavigateToReport = (film: Film, route: FilmTool) => {
     setActiveFilm(film);
-    if (route === 'fib') {
-      navigate(`/fib/${film.id}`);
-    } else {
-      navigate(`/${route}`);
-    }
+    navigate(filmToolPath(film.clientId, film.id, route));
   };
 
-  const filteredCampaigns = campaigns.filter(c => 
+  const filteredCampaigns = campaigns.filter(c =>
     c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.genre.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const clientNameById = useMemo(
+    () => Object.fromEntries(clients.map(c => [c.id, c.name])),
+    [clients]
+  );
+
+  const groupedFilms = useMemo(() => {
+    const groups = new Map<string, Film[]>();
+    for (const film of filteredCampaigns) {
+      const key = film.clientId || '__unassigned';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(film);
+    }
+    const entries = [...groups.entries()];
+    entries.sort(([a], [b]) => {
+      if (a === '__unassigned') return 1;
+      if (b === '__unassigned') return -1;
+      return (clientNameById[a] || '').localeCompare(clientNameById[b] || '');
+    });
+    return entries;
+  }, [filteredCampaigns, clientNameById]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -118,7 +142,24 @@ export default function Library() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredCampaigns.map((c, index) => (
+          {groupedFilms.map(([clientId, films]) => {
+            const isUnassigned = clientId === '__unassigned';
+            const label = isUnassigned ? 'Unassigned' : (clientNameById[clientId] || 'Unknown Client');
+            return (
+              <React.Fragment key={clientId}>
+                <div className="flex items-center gap-2 pt-2">
+                  <Building2 className={cn('w-3.5 h-3.5', isUnassigned ? 'text-amber-400' : 'text-ink-tertiary')} />
+                  <span className={cn(
+                    'text-[10px] font-mono font-black uppercase tracking-widest',
+                    isUnassigned ? 'text-amber-400' : 'text-ink-secondary'
+                  )}>
+                    {label}
+                  </span>
+                  <span className="text-[10px] font-mono text-ink-tertiary/60">
+                    · {films.length} {films.length === 1 ? 'film' : 'films'}
+                  </span>
+                </div>
+                {films.map((c, index) => (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -171,10 +212,10 @@ export default function Library() {
 
                 {/* Action */}
                 <div className="md:border-l border-border-subtle md:pl-6">
-                   <button 
+                   <button
                     onClick={() => {
                       setActiveFilm(c);
-                      navigate('/');
+                      navigate(filmToolPath(c.clientId, c.id, 'audience-dna'));
                     }}
                     className="p-3 rounded-full hover:bg-crimson/10 text-ink-secondary hover:text-crimson transition-all"
                    >
@@ -183,7 +224,10 @@ export default function Library() {
                 </div>
               </div>
             </motion.div>
-          ))}
+                ))}
+              </React.Fragment>
+            );
+          })}
         </div>
       )}
     </div>
