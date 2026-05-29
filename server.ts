@@ -407,7 +407,7 @@ function aggregateShows(shows: any[]) {
 }
 
 app.post("/api/showtimes", async (req, res) => {
-  const { title, releaseYear, mode = 'default', cities, releaseDate } = req.body || {};
+  const { title, releaseYear, mode = 'default', cities, releaseDate, sourceUrl } = req.body || {};
   if (!title || typeof title !== 'string') {
     return res.status(400).json({ error: "Missing 'title' (string)" });
   }
@@ -415,9 +415,14 @@ app.post("/api/showtimes", async (req, res) => {
     return res.status(500).json({ error: "Firecrawl API key not configured" });
   }
 
+  // Manual override: trust an explicit jadwalnonton URL when provided. Pattern
+  // is locked to jadwalnonton.com/film/<year>/<slug>/ to prevent abuse.
+  const trustedUrl = typeof sourceUrl === 'string' && /^https:\/\/jadwalnonton\.com\/film\/\d{4}\/[a-z0-9-]+\/?$/i.test(sourceUrl)
+    ? (sourceUrl.endsWith('/') ? sourceUrl : sourceUrl + '/')
+    : null;
   const year = releaseYear || new Date().getFullYear();
   const slug = slugifyTitle(title);
-  const baseUrl = `https://jadwalnonton.com/film/${year}/${slug}/`;
+  const baseUrl = trustedUrl || `https://jadwalnonton.com/film/${year}/${slug}/`;
 
   // Build URLs to scrape
   const scrapeCities: string[] = mode === 'deep'

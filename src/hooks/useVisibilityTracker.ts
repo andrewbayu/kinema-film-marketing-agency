@@ -110,6 +110,7 @@ export function useVisibilityTracker(activeFilm: Film | null) {
           title: activeFilm.title,
           releaseYear,
           releaseDate: activeFilm.releaseDate,
+          sourceUrl: activeFilm.showtimeUrl,
           mode: 'default'
         }).catch(err => {
           console.warn("Showtime fetch failed:", err);
@@ -153,6 +154,7 @@ export function useVisibilityTracker(activeFilm: Film | null) {
         title: activeFilm.title,
         releaseYear,
         releaseDate: activeFilm.releaseDate,
+        sourceUrl: activeFilm.showtimeUrl,
         mode: 'deep'
       });
       if (showtimeResp && !showtimeResp.error) {

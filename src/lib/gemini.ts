@@ -315,6 +315,7 @@ interface TrendsResponse {
   peakScore: number;
   peakDate: string | null;
   dataPoints: number;
+  timeline?: Array<{ date: string; value: number }>;
   note?: string;
 }
 
@@ -455,8 +456,7 @@ export async function performVisibilityScan(
     const grounding = await generateWithRetry(
       groundingPrompt,
       {
-        tools: [{ googleSearch: {} }],
-        toolConfig: { includeServerSideToolInvocations: true }
+        tools: [{ googleSearch: {} }]
       }
     );
     groundedResearch = grounding.text || "";
@@ -599,6 +599,9 @@ export async function performVisibilityScan(
     },
     sentiment: normalizeSentiment(aiResult?.sentiment),
     trends: aiResult?.trends || [],
+    // Real daily Google Trends interest series (0-100) for the title. The hero
+    // chart plots this directly. Always an array — Firestore rejects undefined.
+    searchTrend: titleTrends?.timeline ?? [],
     lastScanAt: currentDateIso,
     topGeographies: aiResult?.topGeographies || [],
     platformPerformance: aiResult?.platformPerformance || [],

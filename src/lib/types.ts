@@ -12,6 +12,11 @@ export interface Film {
   ipType?: IPType;
   releaseDate?: string;
 
+  // Optional override: jadwalnonton.com URL for showtime scraping. Used when the
+  // auto-derived URL (built from slugify(title) + releaseDate's year) doesn't match
+  // the canonical slug on jadwalnonton.
+  showtimeUrl?: string;
+
   // Hierarchy: which Client (production house/account) owns this film.
   // Optional during Phase 1 transition; required after data migration.
   clientId?: string;
@@ -103,6 +108,7 @@ export interface FilmProfileInput {
   director?: string;
   releaseWindow?: string; // Optional for legacy or AI to fill
   releaseDate: string; // Required for new scans
+  showtimeUrl?: string; // Optional manual override for jadwalnonton URL
 }
 
 export interface BoxPredictInput extends FilmProfileInput {
@@ -305,6 +311,7 @@ export interface VisibilityTrackerResult {
     negative: number;
   };
   trends: string[];
+  searchTrend?: Array<{ date: string; value: number }>; // Real daily Google Trends interest (0-100)
   lastScanAt: string;
   topGeographies?: string[];
   platformPerformance: Array<{

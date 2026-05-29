@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { 
   TrendingUp, 
   Search, 
@@ -31,21 +31,18 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Area,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  ReferenceLine,
   PieChart,
   Pie,
   Cell
 } from 'recharts';
 
 const METRIC_INFO = {
-  marketReach: "Total estimasi jumlah penonton unik yang sudah terpapar konten/iklan film ini (Total Awareness) di berbagai platform digital.",
-  conversionIndex: "Mengukur sejauh mana awareness berubah menjadi ketertarikan aktif (klik, percarian, diskusi). Angka tinggi menunjukkan konten yang viral dan relevan.",
-  dailyVelocity: "Tingkat pertumbuhan jangkauan per hari. Indikator momentum campaign apakah sedang memanas atau mendingin.",
-  targetReach: "Target jangkauan minimum yang harus dicapai agar peluang mengamankan jumlah penonton Skenario P50 (Base) tetap terjaga.",
+  searchMomentum: "Sinyal REAL: minat pencarian Google Trends Indonesia (indeks relatif 0–100, 7 hari terakhir). Ini proxy demand — BUKAN jumlah tiket. Yang penting bentuk kurvanya: naik = momentum membangun jelang rilis, turun = mendingin.",
   p50Admissions: "Estimasi jumlah penonton (tiket terjual) berdasarkan performa film sejenis dalam database benchmark KINEMA.",
   visibilityGap: "Selisih antara reach saat ini dengan target reach yang dibutuhkan. Angka negatif menunjukkan campaign perlu akselerasi strategis.",
   readiness: "Status kesiapan campaign mencapai target plateau 7 hari sebelum tayang perdana. Titik kritis penentu kesuksesan opening weekend."
@@ -71,8 +68,6 @@ export default function VisibilityTracker() {
     handleDeepCityScan
   } = useVisibilityTracker(activeFilm);
 
-  const [timeRange, setTimeRange] = useState<'4H' | '1D' | '1W'>('1D');
-
   // Automated Scanning Logic (Every 4 hours)
   useEffect(() => {
     if (activeFilm && cooldown === null && !loading && !isAutoScanning) {
@@ -96,86 +91,65 @@ export default function VisibilityTracker() {
     { name: 'Negative', value: latestScan.sentiment.negative || 0, color: '#ef4444' }
   ] : [];
 
-  // Chart Filtering Logic
-  // Build the cumulative series across the FULL history first, then filter to the
-  // visible window. This keeps the "Current Reach" counter stable across range
-  // toggles — switching 1W→4H no longer rebases the cumulative max to whatever
-  // happens to be the lowest point in the last 4 hours.
-  // Failed scans (currentAwareness === 0/null) are dropped before the cumulative
-  // pass so they don't silently masquerade as "no growth".
-  const getFilteredData = () => {
-    const now = Date.now();
-    const ranges = {
-      '4H': 4 * 60 * 60 * 1000,
-      '1D': 24 * 60 * 60 * 1000,
-      '1W': 7 * 24 * 60 * 60 * 1000,
-    };
-    const period = ranges[timeRange];
+  // Pacing-to-P50 data prep.
+  // Hero series = the REAL daily Google Trends interest (0-100). Source: latest
+  // scan's searchTrend if present; if the Trends API was down on the latest scan
+  // (empty array), walk back through history to the most recent scan that DID
+  // capture a series, and show it with a "stale" badge so it's not silently
+  // out-of-date. Note: Google Trends normalizes the window so its peak == 100, so
+  // what's meaningful here is the SHAPE (rising vs cooling), not the absolute level.
+  const seriesSource = (() => {
+    const found = history.find(h => (h.searchTrend ?? []).length > 0);
+    if (!found) return { trend: [] as Array<{ date: string; value: number }>, isStale: false, sourceDate: undefined as string | undefined };
+    const isLatest = found.lastScanAt === latestScan?.lastScanAt;
+    return { trend: found.searchTrend ?? [], isStale: !isLatest, sourceDate: found.lastScanAt };
+  })();
 
-    let maxReachSoFar = 0;
-    const cumulative = [...history]
-      .filter(h => h && h.lastScanAt && h.funnel && typeof h.funnel === 'object')
-      .filter(h => (h.funnel?.currentAwareness ?? 0) > 0)
-      .sort((a, b) => new Date(a.lastScanAt).getTime() - new Date(b.lastScanAt).getTime())
-      .map(h => {
-        const reach = h.funnel?.currentAwareness || 0;
-        maxReachSoFar = Math.max(maxReachSoFar, reach);
-        return {
-          timestamp: new Date(h.lastScanAt).getTime(),
-          reach: maxReachSoFar,
-          target: h.funnel?.requiredAwareness || 0
-        };
-      });
+  const searchSeries = seriesSource.trend
+    .filter(p => p && p.date)
+    .map(p => ({ timestamp: new Date(p.date).getTime(), value: Math.max(0, Math.round(p.value || 0)) }))
+    .filter(p => !Number.isNaN(p.timestamp))
+    .sort((a, b) => a.timestamp - b.timestamp);
 
-    return cumulative.filter(p => (now - p.timestamp) <= period);
-  };
+  const hasSeries = searchSeries.length > 0;
+  const currentInterest = hasSeries ? searchSeries[searchSeries.length - 1].value : 0;
+  const firstInterest = hasSeries ? searchSeries[0].value : 0;
+  const interestDelta = currentInterest - firstInterest;
+  const peakPoint = hasSeries
+    ? searchSeries.reduce((m, p) => (p.value > m.value ? p : m), searchSeries[0])
+    : null;
 
-  const formatXTick = (ts: number) => {
-    const d = new Date(ts);
-    if (timeRange === '1W') {
-      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-    }
-    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  };
+  // Pacing context (real, from prior tools — BoxPredict P50 + release-date math).
+  const daysToH7 = latestScan?.trajectory?.daysToH7 ?? 0;
+  const requiredDailyGrowth = latestScan?.trajectory?.requiredDailyGrowth ?? 0;
+  const p50Target = latestScan?.funnel?.p50Target ?? 0;
+  const targetPeakDate = latestScan?.trajectory?.targetPeakDate;
 
-  const formatTooltipLabel = (ts: number) =>
-    new Date(ts).toLocaleString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Honest momentum: compound daily growth of the REAL interest series over its
+  // window, vs the growth the trajectory says is required to hit readiness by H-7.
+  const windowDays = hasSeries
+    ? Math.max(1, (searchSeries[searchSeries.length - 1].timestamp - searchSeries[0].timestamp) / 86400000)
+    : 0;
+  const realDailyGrowth = !hasSeries
+    ? 0
+    : firstInterest > 0
+      ? Math.round((Math.pow(Math.max(1, currentInterest) / firstInterest, 1 / windowDays) - 1) * 100)
+      : (currentInterest > 0 ? 100 : 0);
+  const paceStatus: 'on-track' | 'at-risk' | 'critical' =
+    !hasSeries ? 'critical'
+      : realDailyGrowth >= requiredDailyGrowth ? 'on-track'
+        : realDailyGrowth >= requiredDailyGrowth * 0.5 ? 'at-risk'
+          : 'critical';
+  const paceStatusMeta = {
+    'on-track': { label: 'ON TRACK', dot: 'bg-green-500', color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30' },
+    'at-risk': { label: 'AT RISK', dot: 'bg-yellow-500', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
+    'critical': { label: 'CRITICAL', dot: 'bg-crimson', color: 'text-crimson', bg: 'bg-crimson/10', border: 'border-crimson/30' },
+  }[paceStatus];
 
-  const trendData = getFilteredData();
-  const targetReach = latestScan?.funnel?.requiredAwareness || 0;
-
-  // Calculate Y-axis domain for TradingView-style scaling. Include per-point
-  // target values so the dashed P50 line is always within the visible range.
-  const reachValues = trendData.map(d => d.reach);
-  const targetValues = trendData.map(d => d.target).filter(v => v > 0);
-  const allValues = (reachValues.length > 0 || targetValues.length > 0)
-    ? [...reachValues, ...targetValues, targetReach]
-    : [targetReach];
-  const minVal = Math.min(...allValues);
-  const maxVal = Math.max(...allValues);
-  
-  // Padding for the graph (15% top and bottom). Floor at 1000 so we never produce a
-  // collapsed [0,0] domain when everything is zero — the axis would have no ticks.
-  const yPadding = Math.max((maxVal - minVal) * 0.15, maxVal * 0.15, 1000);
-  const yDomainMin = Math.max(0, minVal - yPadding);
-  const yDomainMax = Math.max(maxVal + yPadding, yDomainMin + 1);
-
-  // Ensure consistent display between chart and counter (Cumulative Awareness)
-  const currentReachDisplay = trendData.length > 0
-    ? trendData[trendData.length - 1].reach
-    : (latestScan?.funnel?.currentAwareness || 0);
-
-  // Single-point chart needs an explicit X-domain — Recharts collapses dataMin/dataMax
-  // to the same value otherwise and the dot renders off-screen.
-  const isSinglePoint = trendData.length === 1;
-  const xDomain: [number | string, number | string] = isSinglePoint
-    ? [trendData[0].timestamp - 30 * 60 * 1000, trendData[0].timestamp + 30 * 60 * 1000]
-    : ['dataMin', 'dataMax'];
+  const formatDate = (ts: number) =>
+    new Date(ts).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+  const formatDateStr = (s?: string) =>
+    s ? new Date(s).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
   const formatCooldown = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -183,11 +157,6 @@ export default function VisibilityTracker() {
     const s = seconds % 60;
     return `${h}h ${m}m ${s}s`;
   };
-
-  const hasHistoricalData = history.some(h => {
-    const d = new Date(h.lastScanAt);
-    return d.getMonth() === 4 && d.getDate() < 16; // May (index 4) before 16th
-  });
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 font-sans">
@@ -286,63 +255,56 @@ export default function VisibilityTracker() {
             
             {/* Market Reach Evolution Graph */}
             <div className="bg-black-1 border border-border-subtle rounded-card p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-crimson" />
-                    <h4 className="text-[10px] font-mono font-black text-ink-tertiary tracking-widest uppercase">Reach Evolution Tracking</h4>
+                    <TrendingUp className="w-4 h-4 text-crimson" />
+                    <h4 className="text-[10px] font-mono font-black text-ink-tertiary tracking-widest uppercase">Pacing to P50 · Search Momentum</h4>
                   </div>
-                  <div className="text-[28px] font-black text-ink-primary italic uppercase tracking-tighter">
-                    Market Reach Trend
-                    <InfoTooltip content={METRIC_INFO.marketReach} />
+                  <div className="text-[28px] font-black text-ink-primary italic uppercase tracking-tighter flex items-center">
+                    Search Interest Trend
+                    <InfoTooltip content={METRIC_INFO.searchMomentum} />
                   </div>
                 </div>
-                
-                <div className="flex bg-black-2 p-1 rounded-lg border border-border-subtle">
-                  {(['4H', '1D', '1W'] as const).map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => setTimeRange(range)}
-                      className={cn(
-                        "px-4 py-1.5 rounded-md text-[10px] font-black tracking-widest transition-all",
-                        timeRange === range 
-                          ? "bg-crimson text-white shadow-lg" 
-                          : "text-ink-tertiary hover:text-ink-secondary"
-                      )}
-                    >
-                      {range}
-                    </button>
-                  ))}
+
+                <div className={cn("flex items-center gap-2 px-4 py-2 rounded-full border", paceStatusMeta.bg, paceStatusMeta.border)}>
+                  <span className={cn("w-2 h-2 rounded-full", paceStatusMeta.dot)} />
+                  <span className={cn("text-[11px] font-black tracking-widest uppercase", paceStatusMeta.color)}>{paceStatusMeta.label}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-3 text-[9px] font-mono uppercase tracking-wider text-ink-tertiary">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mb-4 text-[10px] font-mono uppercase tracking-wider text-ink-tertiary">
                 <span className="flex items-center gap-1.5">
                   <span className="w-4 h-0.5 bg-crimson"></span>
-                  Reach
+                  Minat (Google Trends ID · 7 hari)
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-4 border-t-2 border-dashed border-yellow-500"></span>
-                  P50 Target
-                </span>
+                <span>H-7 plateau: <span className="text-ink-secondary font-bold">{formatDateStr(targetPeakDate)}</span></span>
+                <span>Rilis: <span className="text-ink-secondary font-bold">{formatDateStr(activeFilm?.releaseDate)}</span></span>
               </div>
 
+              {seriesSource.isStale && (
+                <div className="mb-3 flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Trends API down · menampilkan data per <span className="font-bold">{formatDateStr(seriesSource.sourceDate)}</span></span>
+                </div>
+              )}
+
               <div className="h-[300px] w-full">
-                {trendData.length === 0 ? (
+                {!hasSeries ? (
                   <div className="h-full w-full flex flex-col items-center justify-center text-center space-y-3 bg-black-2/30 rounded-xl border border-dashed border-border-subtle/50">
                     <Globe className="w-8 h-8 text-ink-tertiary/40" />
                     <div className="space-y-1">
-                      <div className="text-[11px] font-black text-ink-secondary uppercase tracking-wider">No Scans in This Window</div>
+                      <div className="text-[11px] font-black text-ink-secondary uppercase tracking-wider">Belum Ada Data Tren</div>
                       <div className="text-[10px] text-ink-tertiary italic max-w-xs">
-                        Try a wider time range, or run a deep scan to populate the trend line.
+                        Jalankan deep scan untuk memuat kurva minat Google Trends 7 hari terakhir.
                       </div>
                     </div>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <ComposedChart data={searchSeries} margin={{ top: 16, right: 30, left: 0, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="colorReach" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id="colorInterest" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#ee1d23" stopOpacity={0.3}/>
                           <stop offset="95%" stopColor="#ee1d23" stopOpacity={0}/>
                         </linearGradient>
@@ -352,13 +314,13 @@ export default function VisibilityTracker() {
                         dataKey="timestamp"
                         type="number"
                         scale="time"
-                        domain={xDomain}
+                        domain={['dataMin', 'dataMax']}
                         stroke="#ffffff20"
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: '#94a3b8' }}
-                        tickFormatter={formatXTick}
+                        tickFormatter={formatDate}
                       />
                       <YAxis
                         stroke="#ffffff20"
@@ -366,107 +328,84 @@ export default function VisibilityTracker() {
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: '#94a3b8' }}
-                        domain={[yDomainMin, yDomainMax]}
-                        tickFormatter={(val) => formatBigNumber(val)}
+                        domain={[0, 100]}
+                        tickFormatter={(val) => `${val}`}
                       />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '8px' }}
                         labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
-                        labelFormatter={formatTooltipLabel}
-                        formatter={(val: number, name: string) => [
-                          formatBigNumber(val, true),
-                          name === 'reach' ? 'Reach' : 'P50 Target'
-                        ]}
+                        labelFormatter={(ts: number) => formatDate(ts)}
+                        formatter={(val: number) => [`${val}/100`, 'Minat']}
                       />
                       <Area
                         type="monotone"
-                        dataKey="reach"
-                        name="reach"
+                        dataKey="value"
+                        name="value"
                         stroke="#ee1d23"
                         strokeWidth={3}
                         fillOpacity={1}
-                        fill="url(#colorReach)"
-                        animationDuration={1500}
-                        dot={isSinglePoint ? { r: 5, fill: '#ee1d23', stroke: '#ee1d23' } : false}
+                        fill="url(#colorInterest)"
+                        animationDuration={1200}
+                        dot={searchSeries.length <= 10 ? { r: 3, fill: '#ee1d23', stroke: '#ee1d23' } : false}
                         activeDot={{ r: 6, fill: '#ee1d23', stroke: '#fff', strokeWidth: 2 }}
                       />
-                      <Line
-                        type="monotone"
-                        dataKey="target"
-                        name="target"
-                        stroke="#eab308"
-                        strokeDasharray="5 5"
-                        strokeWidth={2}
-                        dot={isSinglePoint ? { r: 4, fill: '#eab308', stroke: '#eab308' } : false}
-                        activeDot={{ r: 5, fill: '#eab308', stroke: '#fff', strokeWidth: 2 }}
-                        animationDuration={1500}
-                      />
+                      {peakPoint && (
+                        <ReferenceLine
+                          x={peakPoint.timestamp}
+                          stroke="#eab308"
+                          strokeDasharray="4 4"
+                          label={{ value: `Puncak ${peakPoint.value}`, fill: '#eab308', fontSize: 9, position: 'top' }}
+                        />
+                      )}
                     </ComposedChart>
                   </ResponsiveContainer>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pt-8 border-t border-border-subtle/30">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold text-ink-tertiary uppercase">
-                        Current Reach
-                        <InfoTooltip content={METRIC_INFO.marketReach} />
-                      </div>
-                      <div className="text-[32px] font-black text-ink-primary font-mono leading-none">
-                        {formatBigNumber(currentReachDisplay)}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] font-bold text-ink-tertiary uppercase">
-                        Target Reach
-                        <InfoTooltip content={METRIC_INFO.targetReach} />
-                      </div>
-                      <div className="text-[14px] font-black text-ink-secondary">
-                        {formatBigNumber(latestScan?.funnel?.requiredAwareness || 0)}
-                      </div>
-                    </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-8 border-t border-border-subtle/30">
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-ink-tertiary uppercase flex items-center">
+                    Minat Saat Ini
+                    <InfoTooltip content={METRIC_INFO.searchMomentum} />
                   </div>
-                  <div className="h-2 bg-black-2 rounded-full overflow-hidden border border-border-subtle/30">
-                     <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, ((latestScan?.funnel?.currentAwareness || 0) / (latestScan?.funnel?.requiredAwareness || 1)) * 100)}%` }}
-                      className="h-full bg-gradient-to-r from-crimson to-crimson-rich" 
-                     />
+                  <div className="text-[28px] font-black text-ink-primary font-mono leading-none">
+                    {currentInterest}<span className="text-[14px] text-ink-tertiary">/100</span>
+                  </div>
+                  <div className={cn("text-[10px] font-bold", interestDelta >= 0 ? 'text-green-500' : 'text-crimson')}>
+                    {interestDelta >= 0 ? '+' : ''}{interestDelta} vs awal window
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold text-ink-tertiary uppercase">
-                        Conversion Index
-                        <InfoTooltip content={METRIC_INFO.conversionIndex} />
-                      </div>
-                      <div className="text-[32px] font-black text-ink-primary font-mono leading-none">
-                        {latestScan?.visibilityScore}%
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] font-bold text-ink-tertiary uppercase">
-                        Daily Velocity
-                        <InfoTooltip content={METRIC_INFO.dailyVelocity} />
-                      </div>
-                      <div className="text-[14px] font-black text-green-500">
-                        +{(latestScan?.trajectory?.currentVelocity || 0) > 1000 
-                          ? (latestScan?.trajectory?.currentVelocity || 0).toLocaleString('id-ID')
-                          : latestScan?.trajectory?.currentVelocity}%
-                      </div>
-                    </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-ink-tertiary uppercase">Momentum / Hari</div>
+                  <div className={cn("text-[28px] font-black font-mono leading-none", realDailyGrowth >= requiredDailyGrowth ? 'text-green-500' : 'text-yellow-500')}>
+                    {realDailyGrowth >= 0 ? '+' : ''}{realDailyGrowth}%
                   </div>
-                  <div className="h-2 bg-black-2 rounded-full overflow-hidden border border-border-subtle/30">
-                     <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${latestScan?.visibilityScore || 0}%` }}
-                      className="h-full bg-gradient-to-r from-green-500 to-green-600" 
-                     />
+                  <div className="text-[10px] text-ink-tertiary">butuh +{requiredDailyGrowth}%/hari</div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-ink-tertiary uppercase flex items-center">
+                    Target Admissions (P50)
+                    <InfoTooltip content={METRIC_INFO.p50Admissions} />
                   </div>
+                  {p50Target > 0 ? (
+                    <div className="text-[28px] font-black text-ink-primary font-mono leading-none">{formatBigNumber(p50Target)}</div>
+                  ) : (
+                    <div className="text-[13px] font-bold text-ink-tertiary italic pt-2">Jalankan BoxPredict dulu</div>
+                  )}
+                  <div className="text-[10px] text-ink-tertiary">tiket · skenario base</div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-ink-tertiary uppercase flex items-center">
+                    Hari ke H-7
+                    <InfoTooltip content={METRIC_INFO.readiness} />
+                  </div>
+                  <div className="text-[28px] font-black text-ink-primary font-mono leading-none">
+                    {daysToH7}<span className="text-[14px] text-ink-tertiary">h</span>
+                  </div>
+                  <div className="text-[10px] text-ink-tertiary">rilis {formatDateStr(activeFilm?.releaseDate)}</div>
                 </div>
               </div>
             </div>

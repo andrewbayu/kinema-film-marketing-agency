@@ -47,6 +47,7 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
     defaultValues: {
       budgetTier: 'mid',
       ipType: 'original',
+      showtimeUrl: '',
       ...initialData
     }
   });
@@ -62,7 +63,8 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
         leadCast: initialData.leadCast || '',
         ipType: initialData.ipType || 'original',
         director: initialData.director || '',
-        releaseDate: initialData.releaseDate || ''
+        releaseDate: initialData.releaseDate || '',
+        showtimeUrl: initialData.showtimeUrl || ''
       });
     }
   }, [initialData, reset]);
@@ -144,11 +146,24 @@ export default function FilmProfileForm({ onSubmit, isLoading, submitLabel = "Su
 
         <div>
            <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Director (Optional)</label>
-           <input 
+           <input
             {...register('director')}
             placeholder="Director Name"
             className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors placeholder:text-ink-tertiary/50"
           />
+        </div>
+
+        <div>
+           <label className="block text-[11px] font-mono font-bold text-ink-tertiary uppercase mb-1.5 ml-1">Jadwalnonton URL (Optional)</label>
+           <input
+            {...register('showtimeUrl', {
+              validate: v => !v || /^https:\/\/jadwalnonton\.com\/film\/\d{4}\/[a-z0-9-]+\/?$/i.test(v) || 'URL harus dari jadwalnonton.com/film/...'
+            })}
+            placeholder="https://jadwalnonton.com/film/2025/sekawan-limo-2-gunung-klawih/"
+            className="w-full bg-black-3 border border-border-default rounded-card-sm px-4 py-2.5 text-[14px] focus:border-crimson outline-none hover:border-border-strong transition-colors placeholder:text-ink-tertiary/50"
+          />
+          <p className="text-[10px] text-ink-tertiary mt-1 ml-1">Override kalau slug judul/tahun tidak otomatis match. Kosongkan untuk auto-derive.</p>
+          {errors.showtimeUrl && <span className="text-[10px] text-crimson mt-1 ml-1">{errors.showtimeUrl.message}</span>}
         </div>
       </div>
 
