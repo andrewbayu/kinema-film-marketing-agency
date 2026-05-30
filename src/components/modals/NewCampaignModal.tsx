@@ -19,7 +19,7 @@ interface NewCampaignModalProps {
 
 export default function NewCampaignModal({ isOpen, onClose, onSubmit, isLoading }: NewCampaignModalProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { activeClient } = useFilmContext();
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -29,7 +29,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSubmit, isLoading 
   useEffect(() => {
     if (!isOpen || !user) return;
     setLoadingClients(true);
-    dbService.getClients(user.uid)
+    dbService.getClients(user.uid, isAdmin)
       .then(list => {
         setClients(list);
         // Pre-select: activeClient → only client → first → none

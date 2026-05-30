@@ -26,7 +26,7 @@ const STATUS_COLOR: Record<Client['status'], string> = {
 };
 
 export default function Clients() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const { setActiveClient } = useFilmContext();
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -41,19 +41,19 @@ export default function Clients() {
   useEffect(() => {
     if (!authLoading) {
       if (user) {
-        loadData(user.uid);
+        loadData(user.uid, isAdmin);
       } else {
         setLoading(false);
       }
     }
   }, [user, authLoading]);
 
-  const loadData = async (uid: string) => {
+  const loadData = async (uid: string, fetchAll = false) => {
     setLoading(true);
     try {
       const [clientList, campaignList] = await Promise.all([
-        dbService.getClients(uid),
-        dbService.getCampaigns(uid)
+        dbService.getClients(uid, fetchAll),
+        dbService.getCampaigns(uid, fetchAll)
       ]);
       setClients(clientList);
       setCampaigns(campaignList);

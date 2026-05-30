@@ -17,7 +17,7 @@ type FilterType = 'All' | 'active' | 'pre-release' | 'post';
 export default function Campaigns() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<FilterType>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Campaigns() {
   useEffect(() => {
     if (!authLoading) {
       if (user) {
-        loadData(user.uid);
+        loadData(user.uid, isAdmin);
       } else {
         setCampaigns([]);
         setClients([]);
@@ -41,12 +41,12 @@ export default function Campaigns() {
     }
   }, [user, authLoading]);
 
-  const loadData = async (uid?: string) => {
+  const loadData = async (uid?: string, fetchAll = false) => {
     setLoading(true);
     try {
       const [campaignList, clientList] = await Promise.all([
-        dbService.getCampaigns(uid),
-        dbService.getClients(uid)
+        dbService.getCampaigns(uid, fetchAll),
+        dbService.getClients(uid, fetchAll)
       ]);
       setCampaigns(campaignList || []);
       setClients(clientList || []);

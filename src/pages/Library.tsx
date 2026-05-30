@@ -25,7 +25,7 @@ import { useAuth } from '../hooks/useAuth';
 export default function Library() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<Film[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export default function Library() {
   useEffect(() => {
     if (!authLoading) {
       if (user) {
-        fetchData(user.uid);
+        fetchData(user.uid, isAdmin);
       } else {
         setCampaigns([]);
         setLoading(false);
@@ -43,12 +43,12 @@ export default function Library() {
     }
   }, [user, authLoading]);
 
-  const fetchData = async (uid?: string) => {
+  const fetchData = async (uid?: string, fetchAll = false) => {
     setLoading(true);
     try {
       const [data, clientList] = await Promise.all([
-        dbService.getCampaigns(uid),
-        dbService.getClients(uid)
+        dbService.getCampaigns(uid, fetchAll),
+        dbService.getClients(uid, fetchAll)
       ]);
       setCampaigns(data || []);
       setClients(clientList || []);

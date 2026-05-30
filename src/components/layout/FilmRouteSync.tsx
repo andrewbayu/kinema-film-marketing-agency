@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useParams, Navigate } from 'react-router-dom';
 import { useFilmContext } from '../../hooks/useFilmContext';
+import { useAuth } from '../../hooks/useAuth';
 import { dbService } from '../../services/dbService';
 import { Loader2 } from 'lucide-react';
 
@@ -11,6 +12,7 @@ import { Loader2 } from 'lucide-react';
 export default function FilmRouteSync() {
   const { clientId, filmId } = useParams<{ clientId: string; filmId: string }>();
   const { activeClient, activeFilm, setActiveClient, setActiveFilm } = useFilmContext();
+  const { isAdmin } = useAuth();
   const [hydrating, setHydrating] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
@@ -30,7 +32,7 @@ export default function FilmRouteSync() {
         const needFilm = !filmMatches;
         const [client, campaigns] = await Promise.all([
           needClient ? dbService.getClient(clientId) : Promise.resolve(activeClient),
-          needFilm ? dbService.getCampaigns() : Promise.resolve(null),
+          needFilm ? dbService.getCampaigns(undefined, isAdmin) : Promise.resolve(null),
         ]);
         if (cancelled) return;
 
@@ -50,7 +52,7 @@ export default function FilmRouteSync() {
     })();
 
     return () => { cancelled = true; };
-  }, [clientId, filmId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clientId, filmId, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (notFound) {
     return <Navigate to="/campaigns" replace />;

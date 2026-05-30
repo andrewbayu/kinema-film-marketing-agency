@@ -91,17 +91,18 @@ export const dbService = {
     }
   },
 
-  async getClients(uid?: string): Promise<Client[]> {
+  // fetchAll = true returns every client in the workspace (admin/team members
+  // share one client list). See getCampaigns for why the unfiltered query is
+  // allowed by the Firestore rules for admins only.
+  async getClients(uid?: string, fetchAll = false): Promise<Client[]> {
     const userId = uid || auth.currentUser?.uid;
     if (!userId) return [];
 
     const path = 'clients';
     try {
-      const q = query(
-        collection(db, path),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
-      );
+      const q = fetchAll
+        ? query(collection(db, path), orderBy('createdAt', 'desc'))
+        : query(collection(db, path), where('userId', '==', userId), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Client);
     } catch (error) {
@@ -223,9 +224,14 @@ export const dbService = {
     return result;
   },
 
-  async getCampaigns(uid?: string) {
+  // fetchAll = true returns every campaign in the workspace (used by admin/team
+  // members so the internal team shares one campaign list). Firestore rules
+  // permit this because isAdmin() short-circuits the per-doc owner check, so an
+  // unfiltered list query from a team member is allowed. Non-admins must keep
+  // fetchAll false — an unfiltered query from them is denied by the rules.
+  async getCampaigns(uid?: string, fetchAll = false) {
     const userId = uid || auth.currentUser?.uid;
-    console.log("Fetching campaigns for user:", userId);
+    console.log("Fetching campaigns for user:", userId, "fetchAll:", fetchAll);
     if (!userId) {
       console.warn("No userId provided, returning empty list");
       return [];
@@ -233,13 +239,11 @@ export const dbService = {
 
     const path = 'campaigns';
     try {
-      const q = query(
-        collection(db, path), 
-        where('userId', '==', userId), 
-        orderBy('createdAt', 'desc')
-      );
+      const q = fetchAll
+        ? query(collection(db, path), orderBy('createdAt', 'desc'))
+        : query(collection(db, path), where('userId', '==', userId), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      console.log(`Found ${snapshot.size} campaigns for user ${userId}`);
+      console.log(`Found ${snapshot.size} campaigns (fetchAll=${fetchAll}) for user ${userId}`);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Film);
     } catch (error) {
       console.error("Firestore getCampaigns error:", error);

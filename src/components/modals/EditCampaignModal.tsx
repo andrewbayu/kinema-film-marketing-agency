@@ -17,7 +17,7 @@ interface EditCampaignModalProps {
 }
 
 export default function EditCampaignModal({ isOpen, onClose, onSubmit, isLoading, initialData }: EditCampaignModalProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [loadingClients, setLoadingClients] = useState(false);
@@ -25,13 +25,13 @@ export default function EditCampaignModal({ isOpen, onClose, onSubmit, isLoading
   useEffect(() => {
     if (!isOpen || !user) return;
     setLoadingClients(true);
-    dbService.getClients(user.uid)
+    dbService.getClients(user.uid, isAdmin)
       .then(list => {
         setClients(list);
         setSelectedClientId(initialData?.clientId || '');
       })
       .finally(() => setLoadingClients(false));
-  }, [isOpen, user, initialData?.clientId]);
+  }, [isOpen, user, isAdmin, initialData?.clientId]);
 
   if (!isOpen) return null;
 

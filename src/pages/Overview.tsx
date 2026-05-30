@@ -15,7 +15,7 @@ import { filmToolPath } from '../lib/routes';
 export default function Overview() {
   const navigate = useNavigate();
   const { setActiveFilm } = useFilmContext();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<Film[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ export default function Overview() {
   useEffect(() => {
     if (!authLoading) {
       if (user) {
-        loadData(user.uid);
+        loadData(user.uid, isAdmin);
       } else {
         setCampaigns([]);
         setClients([]);
@@ -32,12 +32,12 @@ export default function Overview() {
     }
   }, [user, authLoading]);
 
-  const loadData = async (uid?: string) => {
+  const loadData = async (uid?: string, fetchAll = false) => {
     setLoading(true);
     try {
       const [data, clientList] = await Promise.all([
-        dbService.getCampaigns(uid),
-        dbService.getClients(uid)
+        dbService.getCampaigns(uid, fetchAll),
+        dbService.getClients(uid, fetchAll)
       ]);
       setCampaigns(data || []);
       setClients(clientList || []);

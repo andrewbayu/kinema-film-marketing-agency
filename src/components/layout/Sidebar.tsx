@@ -84,9 +84,9 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (!user) { setClients([]); return; }
-    dbService.getClients(user.uid).then(setClients).catch(() => setClients([]));
+    dbService.getClients(user.uid, isAdmin).then(setClients).catch(() => setClients([]));
     // Re-fetch when activeClient changes — catches the create+activate flow on /clients.
-  }, [user, activeClient?.id]);
+  }, [user, isAdmin, activeClient?.id]);
 
   useEffect(() => {
     if (!switcherOpen) return;
