@@ -1,6 +1,6 @@
 # Kinema
 
-Data-driven film marketing platform for the Indonesian theatrical market. A joint venture between Kata.ai and Samara Group.
+Data-driven film marketing platform for the Indonesian theatrical market. 
 
 Kinema combines a curated Gemini system prompt (encoding Indonesian market priors — release-window multipliers, genre baselines, production-house landscape, platform dynamics) with web-grounded data from Firecrawl to produce five proprietary analyses for film campaigns.
 
